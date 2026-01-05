@@ -278,29 +278,7 @@ The API uses standard HTTP status codes:
 - `404` - Not Found
 - `500` - Internal Server Error
 
-## Testing
 
-You can test the API endpoints using:
-- Postman
-- Thunder Client (VS Code extension)
-- cURL commands
-
-Example cURL request:
-```bash
-# Register a new user
-curl -X POST http://localhost:5000/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"username":"testuser","email":"test@example.com","password":"password123"}'
-
-# Login
-curl -X POST http://localhost:5000/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{"email":"test@example.com","password":"password123"}'
-
-# Get expenses (replace TOKEN with actual JWT)
-curl -X GET http://localhost:5000/api/expenses \
-  -H "Authorization: Bearer TOKEN"
-```
 
 ## Contributing
 
