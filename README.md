@@ -68,27 +68,42 @@ CREATE DATABASE expense_tracker;
 
 The application uses the following main tables:
 
-### Users Table
 ```sql
-CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(100) NOT NULL UNIQUE,
-    email VARCHAR(255) NOT NULL UNIQUE,
-    password VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE tbluser (
+	id SERIAL NOT NULL PRIMARY KEY,
+	email VARCHAR(120) UNIQUE NOT NULL,
+	firstName VARCHAR(50) NOT NULL,
+	lastName VARCHAR(50),
+	contact VARCHAR(15),
+	accounts TEXT[],
+	password TEXT,
+	provider VARCHAR(10) NULL,
+	country TEXT,
+	currency VARCHAR(5) NOT NULL DEFAULT 'USD',
+	createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
-```
 
-### Expenses Table
-```sql
-CREATE TABLE expenses (
-    id SERIAL PRIMARY KEY,
-    user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-    description VARCHAR(255) NOT NULL,
-    amount DECIMAL(10, 2) NOT NULL,
-    category VARCHAR(100),
-    date DATE NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+CREATE TABLE tblaccount (
+	id SERIAL NOT NULL PRIMARY KEY,
+	user_id INTEGER NOT NULL REFERENCES tbluser(id),
+	account_name VARCHAR(50) NOT NULL,
+	account_number VARCHAR(50) NOT NULL,
+	account_balance NUMERIC(10, 2) NOT NULL,
+	createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE tbltransaction(
+	id SERIAL NOT NULL PRIMARY KEY,
+	user_id INTEGER NOT NULL REFERENCES tbluser(id),
+	description TEXT NOT NULL,
+	status VARCHAR(10) NOT NULL DEFAULT 'Pending',
+	source VARCHAR(100) NOT NULL,
+	amount NUMERIC(10, 2) NOT NULL,
+	type VARCHAR(10) NOT NULL DEFAULT 'income',
+	createdAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+	updatedAt TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -117,103 +132,6 @@ backend/
 └── package.json
 ```
 
-## API Endpoints
-
-### Authentication Routes
-
-#### Register User
-```http
-POST /api/auth/register
-Content-Type: application/json
-
-{
-    "username": "johndoe",
-    "email": "john@example.com",
-    "password": "securePassword123"
-}
-```
-
-#### Login User
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{
-    "email": "john@example.com",
-    "password": "securePassword123"
-}
-```
-
-**Response:**
-```json
-{
-    "token": "jwt_token_here",
-    "user": {
-        "id": 1,
-        "username": "johndoe",
-        "email": "john@example.com"
-    }
-}
-```
-
-### Expense Routes (Protected)
-
-All expense routes require authentication. Include the JWT token in the Authorization header:
-```
-Authorization: Bearer <your_jwt_token>
-```
-
-#### Get All Expenses
-```http
-GET /api/expenses
-```
-
-#### Get Single Expense
-```http
-GET /api/expenses/:id
-```
-
-#### Create Expense
-```http
-POST /api/expenses
-Content-Type: application/json
-
-{
-    "description": "Grocery shopping",
-    "amount": 45.50,
-    "category": "Food",
-    "date": "2024-01-15"
-}
-```
-
-#### Update Expense
-```http
-PUT /api/expenses/:id
-Content-Type: application/json
-
-{
-    "description": "Updated description",
-    "amount": 50.00,
-    "category": "Food",
-    "date": "2024-01-15"
-}
-```
-
-#### Delete Expense
-```http
-DELETE /api/expenses/:id
-```
-
-#### Get Expenses by Category
-```http
-GET /api/expenses/category/:category
-```
-
-#### Get Expenses Summary
-```http
-GET /api/expenses/summary
-```
-
 ## Running the Application
 
 ### Development Mode
@@ -237,27 +155,6 @@ The server will start on `http://localhost:5000` (or the port specified in your 
 | JWT_SECRET | Secret key for JWT signing | your_secret_key_here |
 | NODE_ENV | Application environment | development/production |
 
-## Dependencies
-
-```json
-{
-    "express": "^4.18.2",
-    "pg": "^8.11.0",
-    "dotenv": "^16.0.3",
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.0",
-    "cors": "^2.8.5",
-    "express-validator": "^7.0.1"
-}
-```
-
-### Dev Dependencies
-```json
-{
-    "nodemon": "^3.0.1"
-}
-```
-
 ## Security Features
 
 - Password encryption using bcrypt
@@ -266,19 +163,6 @@ The server will start on `http://localhost:5000` (or the port specified in your 
 - SQL injection prevention through parameterized queries
 - CORS configuration
 - Input validation and sanitization
-
-## Error Handling
-
-The API uses standard HTTP status codes:
-
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request
-- `401` - Unauthorized
-- `404` - Not Found
-- `500` - Internal Server Error
-
-
 
 ## Contributing
 
