@@ -116,6 +116,7 @@ backend/
 ├── controllers/
 │   ├── authController.js     # Authentication logic
 │   └── expenseController.js  # Expense CRUD operations
+|   |__ transactionContoller.js 
 ├── middleware/
 │   └── authMiddleware.js     # JWT verification middleware
 ├── routes/
