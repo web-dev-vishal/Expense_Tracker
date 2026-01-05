@@ -121,6 +121,7 @@ backend/
 ├── routes/
 │   ├── authRoutes.js         # Authentication routes
 │   └── expenseRoutes.js      # Expense routes
+|   |__ transactionRoutes.js  # Transaction routes
 ├── models/
 │   ├── userModel.js          # User database queries
 │   └── expenseModel.js       # Expense database queries
