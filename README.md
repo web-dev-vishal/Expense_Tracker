@@ -111,27 +111,28 @@ CREATE TABLE tbltransaction(
 
 ```
 backend/
-├── config/
-│   └── db.js                 # Database configuration
-├── controllers/
-│   ├── authController.js     # Authentication logic
-│   └── expenseController.js  # Expense CRUD operations
-|   |__ transactionContoller.js 
-├── middleware/
-│   └── authMiddleware.js     # JWT verification middleware
-├── routes/
-│   ├── authRoutes.js         # Authentication routes
-│   └── expenseRoutes.js      # Expense routes
-|   |__ transactionRoutes.js  # Transaction routes
-├── models/
-│   ├── userModel.js          # User database queries
-│   └── expenseModel.js       # Expense database queries
-├── utils/
-│   └── validation.js         # Input validation helpers
-├── .env                      # Environment variables
-├── .gitignore
-├── server.js                 # Application entry point
-└── package.json
+├── controllers/                    # Business logic handlers
+│   ├── accountController.js       # Handles account-related operations (create, read, update, delete accounts)
+│   ├── authController.js          # Handles authentication logic (login, register, token generation)
+│   ├── transactionController.js   # Manages transaction operations (create, read transactions)
+│   └── userController.js          # Handles user-related operations (profile, user management)
+├── libs/                          # Library and utility files
+│   ├── database.js                # Database connection configuration and setup
+│   └── index.js                   # Exports all library modules
+├── middleware/                    # Express middleware functions
+│   └── authMiddleware.js          # Authentication and authorization middleware (JWT validation)
+├── routes/                        # API route definitions
+│   ├── accountRoutes.js           # Routes for account endpoints (/api/accounts/*)
+│   ├── authRoutes.js              # Routes for authentication endpoints (/api/auth/*)
+│   ├── index.js                   # Combines all routes into main router
+│   ├── transactionRoutes.js       # Routes for transaction endpoints (/api/transactions/*)
+│   └── userRoutes.js              # Routes for user endpoints (/api/users/*)
+├── .env                           # Environment variables (database credentials, JWT secret, ports)
+├── index.js                       # Main application entry point (server setup and configuration)
+├── package-lock.json              # Locked versions of npm dependencies
+├── package.json                   # Project dependencies and scripts
+├── script.sql                     # Database schema and initialization scripts
+└── test.js                        # Test files for API endpoints
 ```
 
 ## Running the Application
