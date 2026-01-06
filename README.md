@@ -44,9 +44,9 @@ npm install
 3. Create a `.env` file in the backend directory with the following variables:
 ```env
 PORT=5000
-DATABASE_URL=postgresql://username:password@localhost:5432/expense_tracker
-JWT_SECRET=your_jwt_secret_key_here
-NODE_ENV=development
+DATABASE_URL=Add your own url 
+JWT_SECRET=your_our_own_jwt_secret_key_here
+NODE_ENV=development / deployment 
 ```
 
 4. Set up the PostgreSQL database:
