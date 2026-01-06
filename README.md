@@ -12,7 +12,7 @@ A robust RESTful API built with Node.js, Express, and PostgreSQL for managing pe
 ```
 
 ## Features
-
+```
 - User authentication and authorization
 - Secure JWT-based session management
 - CRUD operations for expense tracking
@@ -20,6 +20,7 @@ A robust RESTful API built with Node.js, Express, and PostgreSQL for managing pe
 - User-specific data isolation
 - Input validation and error handling
 - RESTful API architecture
+```
 
 ## Prerequisites
 
