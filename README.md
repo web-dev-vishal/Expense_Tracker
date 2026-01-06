@@ -3,12 +3,13 @@
 A robust RESTful API built with Node.js, Express, and PostgreSQL for managing personal expenses and tracking financial transactions.
 
 ## Tech Stack
-
+ ```
 - **Runtime:** Node.js
 - **Framework:** Express.js
 - **Database:** PostgreSQL
 - **Authentication:** JWT (JSON Web Tokens)
 - **Security:** bcrypt for password hashing
+```
 
 ## Features
 
