@@ -19,7 +19,6 @@ app.use("/",(req,res) => {
     res.json({message:"Expense Tracker is Up and Runnig"});
 })
 
-
 app.listen(PORT, ()=> {
     console.log(`Server is listening at http://localhost:{PORT}`)
 });
