@@ -1,14 +1,15 @@
 import express from "express";
+import authMiddleware from "../middleware/authMiddleware";
 
 const router = express.Router();
 
 // import all controllers
-// import SessionController from './app/controllers/SessionController';
+
 
 // Add routes
-// routes.get('/', SessionController.store);
-// routes.post('/', SessionController.store);
-// routes.put('/', SessionController.store);
-// routes.delete('/', SessionController.store);
+router.get('/', authMiddleware,getUser);
+router.put('/change-password',authMiddleware, changePassword );
+// router.post('/', SessionController.store);
+// router.delete('/', SessionController.store);
 
 export default router;
