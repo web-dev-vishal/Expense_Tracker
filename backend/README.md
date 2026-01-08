@@ -191,3 +191,6 @@ For any questions or support, please open an issue in the repository.
 - PostgreSQL documentation
 - JWT documentation
 - Node.js community
+
+Rate limite 
+Redis for password of user password changeing 
