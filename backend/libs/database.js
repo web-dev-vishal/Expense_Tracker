@@ -1,5 +1,5 @@
 import pg from "pg";
-import { decrypt } from "dotenv";
+import dotenv from "dotenv";
 
 dotenv.config();
 
