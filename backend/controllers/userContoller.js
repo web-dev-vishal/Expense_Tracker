@@ -62,7 +62,30 @@ export const changePassword = async (req, res) => {
 }
 export const updateUser = async (req, res) => {
     try {
+        const { userId } = req.body.user;
+        const { firstname, lastname, country, currency, contact } = req.body;
 
+        const userExist = await pool.query({
+            text: `SELECT * FROM tbluser WHERE id = $1`,
+            values: [userId],
+        });
+
+        const user = userExist.rows[0];
+
+        if (!user) { return res.status(404).json({ status: "failed", message: "User not found❗" })}
+
+        const updatedUser = await pool.query({
+            text: `UPDATE tbluser SET firstname = $1, lastname = $2, country = $3, currency = $4, contact = $5, updatedat = CURRENT_TIMESTAMP WHERE id = $6 RETURNING *`,
+            values: [firstname, lastname, country, currency, contact, userId],
+        });
+
+        updatedUser.rows[0].password = undefined;
+
+        res.status(200).json({
+            status: "success",
+            message: "User updated successfully ✅",
+            user: updatedUser.rows[0],
+        });
     } catch (error) {
         console.log(error);
         res.status(500).res.json({ status: "Failed", message: error.message });
