@@ -1,15 +1,16 @@
 import express from "express";
+// import all middleware
 import authMiddleware from "../middleware/authMiddleware";
+// import all controllers
 
 const router = express.Router();
 
-// import all controllers
 
 
 // Add routes
 router.get('/', authMiddleware,getUser);
 router.put('/change-password',authMiddleware, changePassword );
-// router.post('/', SessionController.store);
+router.post('/:id',authMiddleware,updateUser );
 // router.delete('/', SessionController.store);
 
 export default router;
