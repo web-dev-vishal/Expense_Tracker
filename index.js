@@ -19,3 +19,7 @@ app.use("*", (req,res)=>{
         message: 'Route not found'
     })
 });
+
+app.listen(PORT, ()=> {
+    console.log(`Server is listening at http://localhost:{PORT}`)
+})
