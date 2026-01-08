@@ -1,4 +1,5 @@
-import { pool } from "../libs/database.js"
+import { pool } from "../libs/database.js";
+import { hashPassword } from "../libs/index.js";
 
 export const signinUser = async (req, res) => {
     try {
@@ -23,7 +24,21 @@ export const signinUser = async (req, res) => {
             });
         }
 
-        
+        const hashedPassword = await hashPassword(password);
+
+        const user = await pool.query({
+            text: `INSERT INTO tbluser (firstname, email, password) VALUES ($1, $2, $3) RETURNING *`,
+            values: [firstName, email, hashedPassword],
+        });
+
+        user.rows[0].password = undefined;
+
+        res.status(201).json({
+            status: "success",
+            message: "User account created successfully",
+            user: user.rows[0],
+        });
+
     } catch (error) {
         console.log(error);
         res.status(500).json({ status: "failed", message: error.message });
