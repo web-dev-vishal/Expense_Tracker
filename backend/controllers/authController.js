@@ -13,8 +13,7 @@ export const signinUser = async(req,res)=> {
 
         const userExist = await pool.query ({
             text: "SELECT EXISTS (SELECT * FROM tbluser WHERE email = $1)",
-            values: [email], 
-
+            values: [email],
         })
     } catch (error) {
         console.log(error);
