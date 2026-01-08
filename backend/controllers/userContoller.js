@@ -32,9 +32,29 @@ export const changePassword = async (req, res) => {
 }
 export const updateUser = async (req, res) => {
     try {
+        const { userId } = req.body.user;
+
+        const { currentPassword, newPassword, confifPassword } = req.body;
+
+        const userExist = await pool.query({
+            text: `SELECT * FROM tbluser WHERE id = $1`,
+        })
+
+        const user = userExist.rows[0];
+
+        if (!user) { return res.status(404).json({ status: "Failed", message: "User not found" }) };
+
 
     } catch (error) {
         console.log(error);
         res.status(500).res.json({ status: "Failed", message: error.message });
     }
 }
+// export const updateUser = async (req, res) => {
+//     try {
+
+//     } catch (error) {
+//         console.log(error);
+//         res.status(500).res.json({ status: "Failed", message: error.message });
+//     }
+// }
