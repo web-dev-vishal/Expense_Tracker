@@ -9,7 +9,7 @@ const router = express.Router();
 // Add routes
 router.get('/', authMiddleware, getUser);
 router.put('/change-password',authMiddleware, changePassword );
-router.post('/:id',authMiddleware,updateUser );
+router.put('/profile-update',authMiddleware,updateUser );
 // router.delete('/', SessionController.store);
 
 export default router;
