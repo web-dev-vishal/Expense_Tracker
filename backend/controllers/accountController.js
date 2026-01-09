@@ -1,5 +1,7 @@
 import { pool } from "../libs/database.js";
 
+// =============================================================== //
+
 export const getAccounts = async (req,res)=> {
     try {
         const {userId} = req.body.user;
@@ -14,6 +16,8 @@ export const getAccounts = async (req,res)=> {
         res.status(500).json({ status: "Failed", message: error.message})
     }  
 };
+
+// =============================================================== //
 
 export const createAccount = async (req,res)=> {
     try {
@@ -82,46 +86,7 @@ export const createAccount = async (req,res)=> {
     }
 };
 
-// export const addMoneyToAccount = async (req, res) => {
-//   try {
-//     const { userId } = req.body.user;
-//     const { id } = req.params;
-//     const { amount } = req.body;
-
-//     const newAmount = Number(amount);
-
-//     const result = await pool.query({
-//       text: `UPDATE tblaccount SET account_balance =(account_balance + $1), updatedat = CURRENT_TIMESTAMP  WHERE id = $2 RETURNING *`,
-//       values: [newAmount, id],
-//     });
-
-//     const accountInformation = result.rows[0];
-
-//     const description = accountInformation.account_name + " (Deposit)";
-
-//     const transQuery = {
-//       text: `INSERT INTO tbltransaction(user_id, description, type, status, amount, source) VALUES($1, $2, $3, $4, $5, $6) RETURNING *`,
-//       values: [
-//         userId,
-//         description,
-//         "income",
-//         "Completed",
-//         amount,
-//         accountInformation.account_name,
-//       ],
-//     };
-//     await pool.query(transQuery);
-
-//     res.status(200).json({
-//       status: "success",
-//       message: "Operation completed successfully",
-//       data: accountInformation,
-//     });
-//   } catch (error) {
-//     console.log(error);
-//     res.status(500).json({ status: "failed", message: error.message });
-//   }
-// };
+// =============================================================== //
 
 export const addMoneyToAccount = async (req, res) => {
   try {
@@ -129,26 +94,33 @@ export const addMoneyToAccount = async (req, res) => {
     const { id } = req.params;
     const { amount } = req.body;
 
-    if (!amount || isNaN(amount)) {
-      return res.status(400).json({ 
-        status: "failed", 
-        message: "Please provide a valid amount" 
+    const newAmount = Number(amount);
+
+    // First, check if the account exists
+    const checkAccount = await pool.query({
+      text: `SELECT * FROM tblaccount WHERE id = $1`,
+      values: [id],
+    });
+
+    if (checkAccount.rows.length === 0) {
+      return res.status(404).json({
+        status: "failed",
+        message: "Account not found",
       });
     }
 
-    const newAmount = Number(amount);
-
+    // Update the account balance
     const result = await pool.query({
-      text: `UPDATE tblaccount SET account_balance =(account_balance + $1), updatedat = CURRENT_TIMESTAMP  WHERE id = $2 RETURNING *`,
+      text: `UPDATE tblaccount SET account_balance = (account_balance + $1), updatedat = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
       values: [newAmount, id],
     });
 
     const accountInformation = result.rows[0];
 
-    if (!accountInformation) {
-      return res.status(404).json({
+    if (!accountInformation || !accountInformation.account_name) {
+      return res.status(500).json({
         status: "failed",
-        message: "Account not found"
+        message: "Failed to update account",
       });
     }
 
@@ -161,7 +133,7 @@ export const addMoneyToAccount = async (req, res) => {
         description,
         "income",
         "Completed",
-        newAmount,
+        amount,
         accountInformation.account_name,
       ],
     };
