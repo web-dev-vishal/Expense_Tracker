@@ -8,7 +8,7 @@ import userRoutes from "./userRoutes.js";
 const router  = express.Router();
 
 router.use("/auth", authRoutes);
-router.use("/account", accountRoutes);
+router.use("/account", accountRoutes)
 // router.use("/transaction", transactionRoutes);
 router.use("/user", userRoutes);
 
