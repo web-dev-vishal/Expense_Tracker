@@ -23,6 +23,17 @@ exports.registerUser = async (req, res) => {
             return res.status(400).json({ message: "Email already in use try different Email" });
         }
 
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({ message: "Please provide a valid email address" });
+        }
+
+        // Password length validation
+        if (password.length < 6) {
+            return res.status(400).json({ message: "Password must be at least 6 characters long" });
+        }
+
         //Creating a user
         const user = await User.create({
             fullName,
