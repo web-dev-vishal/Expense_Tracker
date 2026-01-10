@@ -17,6 +17,9 @@ connectDB();
 
 app.use('/api/v1/auth', authRoutes)
 
+// Server upload folder
+app.use('/uploads', express.static(path.join(__dirname, "uploads")));
+
 app.listen(PORT, () =>{ 
     console.log(`Example app listening at http://localhost:${PORT}`)
 });
