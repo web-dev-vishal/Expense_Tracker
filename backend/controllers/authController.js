@@ -53,7 +53,38 @@ exports.registerUser = async (req, res) => {
 };
 
 // Login User
-exports.loginUser = async (req, res) => { };
+exports.loginUser = async (req, res) => {
+    const { email, password } = req.body;
+    
+    if (!email || !password) {
+        return res.status(400).json({ message: "All fields are required" });
+    }
+
+    try {
+        const user = await User.findOne({ email });
+        if (!user || !(await user.comparePassword(password))) {
+            return res.status(401).json({ message: "Invalid credentials" });
+        }
+
+        // Remove password from response
+        const userResponse = {
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            profileImageUrl: user.profileImageUrl,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+
+        res.status(200).json({
+            message: "Login successful",
+            user: userResponse,
+            token: generateToken(user._id),
+        });
+    } catch (err) {
+        res.status(500).json({ message: "Error logging in user", error: err.message });
+    }
+};
 
 // GetInfo User
 exports.getUserInfo = async (req, res) => { };
