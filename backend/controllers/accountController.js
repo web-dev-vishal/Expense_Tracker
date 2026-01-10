@@ -94,49 +94,51 @@ export const addMoneyToAccount = async (req, res) => {
     const { id } = req.params;
     const { amount } = req.body;
 
+    // Validate amount
     const newAmount = Number(amount);
-
-    // First, check if the account exists
-    const checkAccount = await pool.query({
-      text: `SELECT * FROM tblaccount WHERE id = $1`,
-      values: [id],
-    });
-
-    if (checkAccount.rows.length === 0) {
-      return res.status(404).json({
+    if (isNaN(newAmount) || newAmount <= 0) {
+      return res.status(400).json({
         status: "failed",
-        message: "Account not found",
+        message: "Invalid amount. Amount must be a positive number"
       });
     }
 
-    // Update the account balance
+    // Update account balance
     const result = await pool.query({
-      text: `UPDATE tblaccount SET account_balance = (account_balance + $1), updatedat = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
+      text: `UPDATE tblaccount 
+             SET account_balance = (account_balance + $1), 
+                 updatedat = CURRENT_TIMESTAMP 
+             WHERE id = $2 
+             RETURNING *`,
       values: [newAmount, id],
     });
 
-    const accountInformation = result.rows[0];
-
-    if (!accountInformation || !accountInformation.account_name) {
-      return res.status(500).json({
+    // Check if account was found and updated
+    if (result.rows.length === 0) {
+      return res.status(404).json({
         status: "failed",
-        message: "Failed to update account",
+        message: "Account not found. Please create the account first."
       });
     }
 
+    const accountInformation = result.rows[0];
     const description = accountInformation.account_name + " (Deposit)";
 
+    // Insert transaction record
     const transQuery = {
-      text: `INSERT INTO tbltransaction(user_id, description, type, status, amount, source) VALUES($1, $2, $3, $4, $5, $6) RETURNING *`,
+      text: `INSERT INTO tbltransaction(user_id, description, type, status, amount, source) 
+             VALUES($1, $2, $3, $4, $5, $6) 
+             RETURNING *`,
       values: [
         userId,
         description,
         "income",
         "Completed",
-        amount,
+        newAmount,
         accountInformation.account_name,
       ],
     };
+
     await pool.query(transQuery);
 
     res.status(200).json({
@@ -146,6 +148,9 @@ export const addMoneyToAccount = async (req, res) => {
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ status: "failed", message: error.message });
+    res.status(500).json({
+      status: "failed",
+      message: error.message
+    });
   }
 };
