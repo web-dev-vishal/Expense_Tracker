@@ -4,13 +4,13 @@ const IncomeSchema = new mongoose.Schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User",
-        require: true
+        required: true
     },
     icon: {
         type: String
     },
     source: {
-        type: String,  //Ex: Salary, Freelance, etc.
+        type: String,  // Ex: Salary, Freelance, etc.
         required: true
     },
     amount: {
@@ -23,4 +23,4 @@ const IncomeSchema = new mongoose.Schema({
     },
 }, {timestamps: true});
 
-modile.exports = mongoose.model('Income', IncomeSchema);
+module.exports = mongoose.model('Income', IncomeSchema);
