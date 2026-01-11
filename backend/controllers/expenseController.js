@@ -5,9 +5,9 @@ const Expense = require('../models/Expense.js');
 exports.addExpense = async (req, res) => {
     const userId = req.user.id;
     try {
-        const { icon, category, amount, date} = req.body;
+        const { icon, category, amount, date } = req.body;
 
-        if(!category || !amount || !date) {
+        if (!category || !amount || !date) {
             return res.status(400).json({ message: "All fiels are required" });
         }
 
@@ -29,9 +29,10 @@ exports.addExpense = async (req, res) => {
 
 // Get Expense income
 exports.getAllExpense = async (req, res) => {
-
+    const userId = req.user.id;
     try {
-
+        const expense = await Expense.find({ userId }).toSorted({ date: -1 });
+        res.json(expense);
 
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
@@ -41,7 +42,8 @@ exports.getAllExpense = async (req, res) => {
 // Delete Expense Source
 exports.deleteExpense = async (req, res) => {
     try {
-
+        await Expense.findByIdAndDelete(req.params.id);
+        res.json({ message: "Expense deleted successfully" });
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
