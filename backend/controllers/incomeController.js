@@ -87,7 +87,6 @@ exports.downloadIncomeExcel = async (req, res) => {
     xlsx.utils.book_append_sheet(wb, ws, "Income");
     xlsx.writeFile(wb, 'income_details.xlsx');
 
-    // res.download expects file path (string), not workbook object
     res.download('income_details.xlsx');
   } catch (error) {
     res.status(500).json({ message: "Server Error" });
