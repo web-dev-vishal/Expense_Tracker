@@ -1,40 +1,57 @@
 const xlsx = require('xlsx');
 const Expense = require('../models/Expense.js');
 
-// Add Income Source
+// Add Expense Source
 exports.addExpense = async (req, res) => {
+    const userId = req.user.id;
     try {
-        
+        const { icon, category, amount, date} = req.body;
+
+        if(!category || !amount || !date) {
+            return res.status(400).json({ message: "All fiels are required" });
+        }
+
+        const newExpense = new Expense({
+            userId,
+            icon,
+            category,
+            amount,
+            date: new Date(date),
+        });
+
+        await newExpense.save();
+        res.status(200).json(newExpense);
+
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
-// Get ALL income
+// Get Expense income
 exports.getAllExpense = async (req, res) => {
 
     try {
-      
+
 
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
-// Delete Income Source
+// Delete Expense Source
 exports.deleteExpense = async (req, res) => {
     try {
-        
+
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
-// Download Excel Sheet
+// Download Expense Excel Sheet
 exports.downloadExpenseExcel = async (req, res) => {
 
     try {
-        
+
     } catch (error) {
         res.status(500).json({ message: "Server error", error: error.message });
     }
