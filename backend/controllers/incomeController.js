@@ -71,29 +71,25 @@ exports.deleteIncome = async (req, res) => {
 
 // Download Excel Sheet
 exports.downloadIncomeExcel = async (req, res) => {
-    const userId = req.user.id;
+  const userId = req.user.id;
+  try {
+    const income = await Income.find({ userId }).sort({ date: -1 });
 
-    try {
-        // Fix 1: Remove toSorted() - use sort() instead
-        const income = await Income.find({ userId }).sort({ date: -1 });
+    // Prepare data for Excel
+    const data = income.map((item) => ({
+      Source: item.source,
+      Amount: item.amount,
+      Date: item.date,
+    }));
 
-        const data = income.map((item) => ({
-            Source: item.source,
-            Amount: item.amount,
-            Date: item.date,
-        }));
+    const wb = xlsx.utils.book_new();
+    const ws = xlsx.utils.json_to_sheet(data);
+    xlsx.utils.book_append_sheet(wb, ws, "Income");
+    xlsx.writeFile(wb, 'income_details.xlsx');
 
-        const wb = xlsx.utils.book_new();
-        const ws = xlsx.utils.json_to_sheet(data);
-        xlsx.utils.book_append_sheet(wb, ws, "Income");
-        
-        // 2: writeFile with capital F and proper file path
-        const filePath = 'income_details.xlsx';
-        xlsx.writeFile(wb, filePath);
-        
-        // 3: res.download expects file path (string), not workbook object
-        res.download(filePath, 'income_details.xlsx');
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
+    // res.download expects file path (string), not workbook object
+    res.download('income_details.xlsx');
+  } catch (error) {
+    res.status(500).json({ message: "Server Error" });
+  }
 };
