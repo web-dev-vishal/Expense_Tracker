@@ -9,7 +9,7 @@ const { addExpense,
 // Import Middleware
 const { protect } = require("../middleware/authMiddleware");
 
-// All Routes
+// All Expense Routes
 const router = express.Router();
 
 router.post('/add', protect, addExpense);
