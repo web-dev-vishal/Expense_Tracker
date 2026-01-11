@@ -8,7 +8,7 @@ exports.addExpense = async (req, res) => {
         const { icon, category, amount, date } = req.body;
 
         if (!category || !amount || !date) {
-            return res.status(400).json({ message: "All fiels are required" });
+            return res.status(400).json({ message: "All fields are required" });
         }
 
         const newExpense = new Expense({
@@ -31,7 +31,7 @@ exports.addExpense = async (req, res) => {
 exports.getAllExpense = async (req, res) => {
     const userId = req.user.id;
     try {
-        const expense = await Expense.find({ userId }).toSorted({ date: -1 });
+        const expense = await Expense.find({ userId }).sort({ date: -1 });
         res.json(expense);
 
     } catch (error) {
