@@ -2,6 +2,8 @@ const User = require('../models/User.js');
 const jwt = require("jsonwebtoken");
 const { generateOTP, storeOTP, verifyOTP } = require('../services/otpService');
 const { sendOTPEmail } = require('../services/emailService');
+const { publishOTPEmail, publishWelcomeEmail } = require('../services/queueService');  // NEW IMPORT
+
 const { 
     createSession, 
     deleteSession, 
@@ -141,6 +143,56 @@ exports.getUserInfo = async (req, res) => {
 // ============= OTP FEATURES - EMAIL ONLY =============
 
 // Send OTP via Email Only
+// exports.sendOTP = async (req, res) => {
+//     const { email } = req.body;
+
+//     if (!email) {
+//         return res.status(400).json({ message: "Email is required" });
+//     }
+
+//     try {
+//         // Check if user exists
+//         const user = await User.findOne({ email });
+//         if (!user) {
+//             return res.status(404).json({ message: "User not found with this email" });
+//         }
+
+//         // Generate OTP
+//         const otp = generateOTP();
+
+//         // Store OTP in Redis
+//         const stored = await storeOTP(email, otp);
+        
+//         if (!stored) {
+//             return res.status(500).json({ message: "Failed to generate OTP. Please try again" });
+//         }
+
+//         console.log('📧 Sending OTP via Email...');
+
+//         // Send email
+//         const emailResult = await sendOTPEmail(email, otp, user.fullName);
+
+//         if (!emailResult.success) {
+//             return res.status(500).json({ 
+//                 message: "Failed to send OTP email",
+//                 error: emailResult.error
+//             });
+//         }
+
+//         console.log('✅ OTP sent successfully to email');
+
+//         res.status(200).json({
+//             message: "OTP sent successfully to your email",
+//             email: email
+//         });
+
+//     } catch (error) {
+//         console.error('❌ Error in sendOTP:', error.message);
+//         res.status(500).json({ message: "Error sending OTP", error: error.message });
+//     }
+// };
+
+// Send OTP via Email (Using RabbitMQ Queue)
 exports.sendOTP = async (req, res) => {
     const { email } = req.body;
 
@@ -165,23 +217,32 @@ exports.sendOTP = async (req, res) => {
             return res.status(500).json({ message: "Failed to generate OTP. Please try again" });
         }
 
-        console.log('📧 Sending OTP via Email...');
+        console.log('📧 Publishing OTP email to queue...');
 
-        // Send email
-        const emailResult = await sendOTPEmail(email, otp, user.fullName);
+        // Publish to RabbitMQ queue (instead of sending directly)
+        const queueResult = await publishOTPEmail(email, otp, user.fullName);
 
-        if (!emailResult.success) {
-            return res.status(500).json({ 
-                message: "Failed to send OTP email",
-                error: emailResult.error
-            });
+        if (!queueResult.success) {
+            console.error('❌ Failed to queue email');
+            
+            // Fallback: Try sending email directly
+            console.log('📧 Attempting direct email send as fallback...');
+            const emailResult = await sendOTPEmail(email, otp, user.fullName);
+            
+            if (!emailResult.success) {
+                return res.status(500).json({ 
+                    message: "Failed to send OTP. Please try again",
+                    error: emailResult.error
+                });
+            }
         }
 
-        console.log('✅ OTP sent successfully to email');
+        console.log('✅ OTP queued successfully');
 
         res.status(200).json({
-            message: "OTP sent successfully to your email",
-            email: email
+            message: "OTP is being sent to your email",
+            email: email,
+            info: "Email will arrive shortly"
         });
 
     } catch (error) {
