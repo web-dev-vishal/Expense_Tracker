@@ -2,6 +2,7 @@ const User = require('../models/User.js');
 const jwt = require("jsonwebtoken");
 const { generateOTP, storeOTP, verifyOTP } = require('../services/otpService');
 const { sendOTPEmail } = require('../services/emailService');
+const { createSession, deleteSession, deleteAllSessions, getActiveSessions } = require('../services/sessionService');
 // const { sendOTPSMS } = require('../services/smsService');
 
 // Generate JWT token
@@ -454,5 +455,77 @@ exports.resetPassword = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: "Error resetting password", error: error.message });
+    }
+};
+
+// ============= NEW SESSION MANAGEMENT FEATURES =============
+
+// Logout (Delete current session)
+exports.logout = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const sessionId = req.sessionId;
+
+        const result = await deleteSession(userId, sessionId);
+
+        if (!result.success) {
+            return res.status(500).json({ 
+                message: "Error logging out",
+                error: result.error 
+            });
+        }
+
+        res.status(200).json({
+            message: "Logged out successfully"
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error logging out", error: error.message });
+    }
+};
+
+// Logout from all devices
+exports.logoutAllDevices = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const result = await deleteAllSessions(userId);
+
+        if (!result.success) {
+            return res.status(500).json({ 
+                message: "Error logging out from all devices",
+                error: result.error 
+            });
+        }
+
+        res.status(200).json({
+            message: `Logged out from all devices successfully`,
+            devicesLoggedOut: result.deletedCount
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error logging out from all devices", error: error.message });
+    }
+};
+
+// Get active sessions
+exports.getActiveSessions = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const result = await getActiveSessions(userId);
+
+        if (!result.success) {
+            return res.status(500).json({ 
+                message: "Error fetching active sessions",
+                error: result.error 
+            });
+        }
+
+        res.status(200).json({
+            message: "Active sessions retrieved successfully",
+            activeSessions: result.sessions,
+            totalSessions: result.count
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching active sessions", error: error.message });
     }
 };

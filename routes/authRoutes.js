@@ -35,7 +35,10 @@ const {
     getUserInfo,
     sendOTP,
     verifyOTPController,
-    resetPassword
+    resetPassword,
+    logout,
+    logoutAllDevices,
+    getActiveSessions
 } = require("../controllers/authController.js");
 
 // import all middleware
@@ -54,6 +57,11 @@ router.get('/getUser', protect, getUserInfo);
 router.post('/send-otp', sendOTP);
 router.post('/verify-otp', verifyOTPController);
 router.post('/reset-password', resetPassword);
+
+// Session management routes (NEW)
+router.post('/logout', protect, logout);
+router.post('/logout-all', protect, logoutAllDevices);
+router.get('/active-sessions', protect, getActiveSessions);
 
 // Image upload route
 router.post("/upload-image", upload.single("image"), (req, res) => {
