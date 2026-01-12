@@ -1,5 +1,6 @@
 // const User = require('../models/User.js');
 // const jwt = require("jsonwebtoken");
+// const { generateOTP, storeOTP, verifyOTP } = require('../services/otpService');
 
 // // Generate JWT token
 // const generateToken = (id) => {
@@ -105,9 +106,116 @@
 //     }
 // };
 
+// // ============= NEW OTP FEATURES =============
+
+// // Send OTP for Password Reset
+// exports.sendOTP = async (req, res) => {
+//     const { email } = req.body;
+
+//     if (!email) {
+//         return res.status(400).json({ message: "Email is required" });
+//     }
+
+//     try {
+//         // Check if user exists
+//         const user = await User.findOne({ email });
+//         if (!user) {
+//             return res.status(404).json({ message: "User not found with this email" });
+//         }
+
+//         // Generate OTP
+//         const otp = generateOTP();
+
+//         // Store OTP in Redis
+//         const stored = await storeOTP(email, otp);
+        
+//         if (!stored) {
+//             return res.status(500).json({ message: "Failed to generate OTP. Please try again" });
+//         }
+
+//         // TODO: Send OTP via email (we'll add this with RabbitMQ later)
+//         console.log(`📧 OTP for ${email}: ${otp}`);
+
+//         res.status(200).json({
+//             message: "OTP sent successfully to your email",
+//             email: email,
+//             // Remove this in production - only for testing
+//             otp: otp
+//         });
+//     } catch (error) {
+//         res.status(500).json({ message: "Error sending OTP", error: error.message });
+//     }
+// };
+
+// // Verify OTP
+// exports.verifyOTPController = async (req, res) => {
+//     const { email, otp } = req.body;
+
+//     if (!email || !otp) {
+//         return res.status(400).json({ message: "Email and OTP are required" });
+//     }
+
+//     try {
+//         const result = await verifyOTP(email, otp);
+
+//         if (!result.success) {
+//             return res.status(400).json({ message: result.message });
+//         }
+
+//         res.status(200).json({
+//             message: result.message,
+//             verified: true
+//         });
+//     } catch (error) {
+//         res.status(500).json({ message: "Error verifying OTP", error: error.message });
+//     }
+// };
+
+// // Reset Password (after OTP verification)
+// exports.resetPassword = async (req, res) => {
+//     const { email, otp, newPassword } = req.body;
+
+//     if (!email || !otp || !newPassword) {
+//         return res.status(400).json({ message: "Email, OTP, and new password are required" });
+//     }
+
+//     // Password validation
+//     if (newPassword.length < 6) {
+//         return res.status(400).json({ message: "Password must be at least 6 characters long" });
+//     }
+
+//     try {
+//         // Verify OTP first
+//         const otpResult = await verifyOTP(email, otp);
+        
+//         if (!otpResult.success) {
+//             return res.status(400).json({ message: otpResult.message });
+//         }
+
+//         // Find user
+//         const user = await User.findOne({ email });
+//         if (!user) {
+//             return res.status(404).json({ message: "User not found" });
+//         }
+
+//         // Update password (will be hashed by pre-save hook in User model)
+//         user.password = newPassword;
+//         await user.save();
+
+//         res.status(200).json({
+//             message: "Password reset successfully. You can now login with your new password"
+//         });
+//     } catch (error) {
+//         res.status(500).json({ message: "Error resetting password", error: error.message });
+//     }
+// };
+
+
 const User = require('../models/User.js');
 const jwt = require("jsonwebtoken");
 const { generateOTP, storeOTP, verifyOTP } = require('../services/otpService');
+const { sendOTPEmail } = require('../services/emailService');
+const { sendOTPSMS } = require('../services/smsService');
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -117,7 +225,7 @@ const generateToken = (id) => {
 // Register User
 exports.registerUser = async (req, res) => {
 
-    const { fullName, email, password, profileImageUrl } = req.body;
+    const { fullName, email, phone, password, profileImageUrl } = req.body;
 
     // Validation: Check for missing fields
     if (!fullName || !email || !password) {
@@ -146,6 +254,7 @@ exports.registerUser = async (req, res) => {
         const user = await User.create({
             fullName,
             email,
+            phone,
             password,
             profileImageUrl
         });
@@ -179,6 +288,7 @@ exports.loginUser = async (req, res) => {
             _id: user._id,
             fullName: user.fullName,
             email: user.email,
+            phone: user.phone,
             profileImageUrl: user.profileImageUrl,
             createdAt: user.createdAt,
             updatedAt: user.updatedAt
@@ -213,9 +323,9 @@ exports.getUserInfo = async (req, res) => {
     }
 };
 
-// ============= NEW OTP FEATURES =============
+// ============= OTP FEATURES WITH EMAIL & SMS =============
 
-// Send OTP for Password Reset
+// Send OTP via Email and SMS
 exports.sendOTP = async (req, res) => {
     const { email } = req.body;
 
@@ -240,14 +350,38 @@ exports.sendOTP = async (req, res) => {
             return res.status(500).json({ message: "Failed to generate OTP. Please try again" });
         }
 
-        // TODO: Send OTP via email (we'll add this with RabbitMQ later)
-        console.log(`📧 OTP for ${email}: ${otp}`);
+        // Send email and SMS simultaneously
+        const emailPromise = sendOTPEmail(email, otp, user.fullName);
+        const smsPromise = user.phone ? sendOTPSMS(user.phone, otp, user.fullName) : null;
+
+        // Wait for both to complete
+        const [emailResult, smsResult] = await Promise.all([
+            emailPromise,
+            smsPromise
+        ]);
+
+        // Check results
+        const emailSent = emailResult.success;
+        const smsSent = smsResult ? smsResult.success : false;
+
+        if (!emailSent && !smsSent) {
+            return res.status(500).json({ 
+                message: "Failed to send OTP. Please try again",
+                emailError: emailResult.error,
+                smsError: smsResult ? smsResult.error : null
+            });
+        }
 
         res.status(200).json({
-            message: "OTP sent successfully to your email",
+            message: emailSent && smsSent 
+                ? "OTP sent successfully to your email and phone"
+                : emailSent 
+                    ? "OTP sent successfully to your email"
+                    : "OTP sent successfully to your phone",
             email: email,
-            // Remove this in production - only for testing
-            otp: otp
+            phone: user.phone || null,
+            emailSent: emailSent,
+            smsSent: smsSent
         });
     } catch (error) {
         res.status(500).json({ message: "Error sending OTP", error: error.message });
