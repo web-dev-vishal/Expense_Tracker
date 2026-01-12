@@ -2,7 +2,7 @@ const User = require('../models/User.js');
 const jwt = require("jsonwebtoken");
 const { generateOTP, storeOTP, verifyOTP } = require('../services/otpService');
 const { sendOTPEmail } = require('../services/emailService');
-const { sendOTPSMS } = require('../services/smsService');
+// const { sendOTPSMS } = require('../services/smsService');
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -317,6 +317,8 @@ exports.getUserInfo = async (req, res) => {
 //         res.status(500).json({ message: "Error sending OTP", error: error.message });
 //     }
 // };
+
+// ========================================================= //
 
 exports.sendOTP = async (req, res) => {
     const { email } = req.body;
