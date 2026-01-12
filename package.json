@@ -21,8 +21,10 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.2",
     "multer": "^2.0.2",
+    "nodemailer": "^7.0.12",
     "pg": "^8.16.3",
     "redis": "^5.10.0",
+    "twilio": "^5.11.2",
     "xlsx": "^0.18.5"
   }
 }
