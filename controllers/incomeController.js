@@ -1,7 +1,9 @@
 const xlsx = require('xlsx');
-const Income = require('../models/Income.js');
+const incomeService = require('../services/incomeService');
 
-// Add Income Source
+/**
+ * Add Income with Redis cache invalidation
+ */
 exports.addIncome = async (req, res) => {
     const userId = req.user.id;
     const { icon, source, amount, date } = req.body;
@@ -11,42 +13,41 @@ exports.addIncome = async (req, res) => {
         return res.status(400).json({ message: "All fields are required" });
     }
 
-    // Validate amount is a positive number
-    if (isNaN(amount) || amount <= 0) {
-        return res.status(400).json({ message: "Amount must be a positive number" });
-    }
-
-    // Validate date format
-    const incomeDate = new Date(date);
-    if (isNaN(incomeDate.getTime())) {
-        return res.status(400).json({ message: "Invalid date format" });
-    }
-
     try {
-        const newIncome = new Income({
-            userId,
+        // Call service to add income (validation happens in service)
+        const newIncome = await incomeService.addIncome(userId, {
             icon,
             source,
-            amount: parseFloat(amount),
-            date: incomeDate
+            amount,
+            date
         });
 
-        await newIncome.save();
         res.status(201).json({
             message: "Income added successfully",
             income: newIncome
         });
+
     } catch (error) {
+        console.error('❌ Add Income Error:', error.message);
+        
+        // Return specific error messages from service
+        if (error.message.includes('Amount must be') || error.message.includes('Invalid date')) {
+            return res.status(400).json({ message: error.message });
+        }
+        
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
-// Get ALL income
+/**
+ * Get All Income with Redis caching
+ */
 exports.getAllIncome = async (req, res) => {
     const userId = req.user.id;
 
     try {
-        const income = await Income.find({ userId }).sort({ date: -1 });
+        // Call service to get income (with caching)
+        const income = await incomeService.getAllIncome(userId);
 
         res.status(200).json({
             message: "Income records retrieved successfully",
@@ -55,40 +56,59 @@ exports.getAllIncome = async (req, res) => {
         });
 
     } catch (error) {
+        console.error('❌ Get All Income Error:', error.message);
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
-// Delete Income Source
+/**
+ * Delete Income with Redis cache invalidation
+ */
 exports.deleteIncome = async (req, res) => {
+    const userId = req.user.id;
+    const incomeId = req.params.id;
+
     try {
-        await Income.findByIdAndDelete(req.params.id);
-        res.json({ message: "Income deleted successfully" });
+        // Call service to delete income
+        const result = await incomeService.deleteIncome(incomeId, userId);
+        
+        res.json(result);
+
     } catch (error) {
+        console.error('❌ Delete Income Error:', error.message);
         res.status(500).json({ message: "Server error", error: error.message });
     }
 };
 
-// Download Excel Sheet
+/**
+ * Download Income Excel Sheet
+ * Note: Uses fresh data (bypasses cache) for accuracy
+ */
 exports.downloadIncomeExcel = async (req, res) => {
-  const userId = req.user.id;
-  try {
-    const income = await Income.find({ userId }).sort({ date: -1 });
+    const userId = req.user.id;
 
-    // Prepare data for Excel
-    const data = income.map((item) => ({
-      Source: item.source,
-      Amount: item.amount,
-      Date: item.date,
-    }));
+    try {
+        // Get fresh data for Excel download
+        const income = await incomeService.getIncomeForExcel(userId);
 
-    const wb = xlsx.utils.book_new();
-    const ws = xlsx.utils.json_to_sheet(data);
-    xlsx.utils.book_append_sheet(wb, ws, "Income");
-    xlsx.writeFile(wb, 'income_details.xlsx');
+        // Prepare data for Excel
+        const data = income.map((item) => ({
+            Source: item.source,
+            Amount: item.amount,
+            Date: item.date,
+        }));
 
-    res.download('income_details.xlsx');
-  } catch (error) {
-    res.status(500).json({ message: "Server Error" });
-  }
+        const wb = xlsx.utils.book_new();
+        const ws = xlsx.utils.json_to_sheet(data);
+        xlsx.utils.book_append_sheet(wb, ws, "Income");
+        
+        const filename = 'income_details.xlsx';
+        xlsx.writeFile(wb, filename);
+
+        res.download(filename);
+
+    } catch (error) {
+        console.error('❌ Download Income Excel Error:', error.message);
+        res.status(500).json({ message: "Server Error", error: error.message });
+    }
 };
