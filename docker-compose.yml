@@ -12,17 +12,6 @@ services:
     networks:
       - expense_network
 
-volumes:
-  mongodb_data:
-    driver: local
-
-networks:
-  expense_network:
-    driver: bridge
-
-version: '3.8'
-
-services:
   redis:
     image: redis:latest
     container_name: expense_tracker_redis
@@ -35,6 +24,8 @@ services:
       - expense_network
 
 volumes:
+  mongodb_data:
+    driver: local
   redis_data:
     driver: local
 
