@@ -1,5 +1,6 @@
 const Expense = require('../models/Expense');
 const { getRedisClient } = require('../config/redis');
+const dashboardService = require('./dashboardService');
 
 // Cache expiration time (5 minutes = 300 seconds)
 const CACHE_EXPIRATION = 300;
@@ -32,7 +33,10 @@ exports.addExpense = async (userId, expenseData) => {
         const cacheKey = getCacheKey(userId);
         await redisClient.del(cacheKey);
         
-        console.log(`✅ Cache invalidated for user ${userId} after adding expense`);
+        console.log(`✅ Expense cache invalidated for user ${userId} after adding expense`);
+
+        // Invalidate dashboard cache
+        await dashboardService.invalidateDashboardCache(userId);
 
         return newExpense;
 
@@ -96,7 +100,10 @@ exports.deleteExpense = async (expenseId, userId) => {
         const cacheKey = getCacheKey(userId);
         await redisClient.del(cacheKey);
 
-        console.log(`✅ Cache invalidated for user ${userId} after deleting expense`);
+        console.log(`✅ Expense cache invalidated for user ${userId} after deleting expense`);
+
+        // Invalidate dashboard cache
+        await dashboardService.invalidateDashboardCache(userId);
 
         return { message: "Expense deleted successfully" };
 

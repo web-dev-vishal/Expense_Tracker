@@ -1,5 +1,6 @@
 const Income = require('../models/Income');
 const { getRedisClient } = require('../config/redis');
+const dashboardService = require('./dashboardService');
 
 // Cache expiration time (5 minutes = 300 seconds)
 const CACHE_EXPIRATION = 300;
@@ -43,7 +44,10 @@ exports.addIncome = async (userId, incomeData) => {
         const cacheKey = getCacheKey(userId);
         await redisClient.del(cacheKey);
 
-        console.log(`✅ Cache invalidated for user ${userId} after adding income`);
+        console.log(`✅ Income cache invalidated for user ${userId} after adding income`);
+
+        // Invalidate dashboard cache
+        await dashboardService.invalidateDashboardCache(userId);
 
         return newIncome;
 
@@ -107,7 +111,10 @@ exports.deleteIncome = async (incomeId, userId) => {
         const cacheKey = getCacheKey(userId);
         await redisClient.del(cacheKey);
 
-        console.log(`✅ Cache invalidated for user ${userId} after deleting income`);
+        console.log(`✅ Income cache invalidated for user ${userId} after deleting income`);
+
+        // Invalidate dashboard cache
+        await dashboardService.invalidateDashboardCache(userId);
 
         return { message: "Income deleted successfully" };
 
