@@ -13,6 +13,10 @@ const app = express();
 
 // Middleware
 app.use(express.json());
+const { apiLimiter } = require('./middleware/rateLimiter');
+
+// Apply global rate limiter to all API routes (OPTIONAL)
+app.use('/api', apiLimiter);
 
 // Health check route
 app.get('/', (req, res) => {
