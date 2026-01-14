@@ -1,6 +1,4 @@
 const express = require("express");
-
-// import all controller
 const { 
     registerUser, 
     loginUser, 
@@ -11,37 +9,34 @@ const {
     logout,
     logoutAllDevices,
     getActiveSessions
-} = require("../controllers/authController.js");
+} = require("../controllers/authController");
 
-// import all middleware
-const { protect } = require("../middleware/authMiddleware.js");
-const upload = require("../middleware/uploadMiddleware.js");
+const { protect } = require("../middleware/authMiddleware");
 
-// all routes
+// Import rate limiters
+const { 
+    authLimiter, 
+    otpLimiter, 
+    passwordResetLimiter 
+} = require("../middleware/rateLimiter");
+
 const router = express.Router();
 
-// Existing routes
-router.post('/register', registerUser);
-router.post('/login', loginUser);
-router.get('/getUser', protect, getUserInfo);
+// Authentication routes with rate limiting
+router.post('/register', authLimiter, registerUser);
+router.post('/login', authLimiter, loginUser);
+router.get('/user', protect, getUserInfo);
 
-// New OTP routes
-router.post('/send-otp', sendOTP);
-router.post('/verify-otp', verifyOTPController);
-router.post('/reset-password', resetPassword);
+// OTP routes with rate limiting
+router.post('/send-otp', otpLimiter, sendOTP);
+router.post('/verify-otp', otpLimiter, verifyOTPController);
 
-// Session management routes (NEW)
+// Password reset with rate limiting
+router.post('/reset-password', passwordResetLimiter, resetPassword);
+
+// Session management routes
 router.post('/logout', protect, logout);
 router.post('/logout-all', protect, logoutAllDevices);
-router.get('/active-sessions', protect, getActiveSessions);
-
-// Image upload route
-router.post("/upload-image", upload.single("image"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
-  }
-  const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
-  res.status(200).json({ imageUrl });
-});
+router.get('/sessions', protect, getActiveSessions);
 
 module.exports = router;
