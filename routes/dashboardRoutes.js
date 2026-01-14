@@ -1,15 +1,14 @@
 const express = require("express");
+const { getDashboardData, refreshDashboard } = require("../controllers/dashboardController");
+const { protect } = require("../middleware/authMiddleware");
 
-// Import all middleware
-const { protect } = require('../middleware/authMiddleware');
+// Import rate limiters
+const { dashboardLimiter } = require("../middleware/rateLimiter");
 
-// Import all controller
-const { getDashboardData } = require("../controllers/destopContoller");
-
-// Import all dashborddata routes
 const router = express.Router();
 
-router.get("/" ,protect, getDashboardData );
+// Apply rate limiter to dashboard routes
+router.get('/get', protect, dashboardLimiter, getDashboardData);
+router.get('/refresh', protect, dashboardLimiter, refreshDashboard);
 
-// exporting module
 module.exports = router;
