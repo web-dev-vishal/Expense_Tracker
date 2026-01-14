@@ -1,18 +1,22 @@
 const express = require("express");
+const { 
+    addIncome, 
+    getAllIncome, 
+    deleteIncome, 
+    downloadIncomeExcel 
+} = require("../controllers/incomeController");
 
-// Import All controller
-const { addIncome, getAllIncome, deleteIncome, downloadIncomeExcel } = require("../controllers/incomeController");
-
-// Import Middleware
 const { protect } = require("../middleware/authMiddleware");
 
-// All Routes
+// Import rate limiters
+const { strictLimiter } = require("../middleware/rateLimiter");
+
 const router = express.Router();
 
-router.post('/add', protect, addIncome);
+// Apply rate limiter to expensive operations
+router.post('/add', protect, strictLimiter, addIncome);
 router.get('/get', protect, getAllIncome);
-router.delete('/:id', protect, deleteIncome) ;
+router.delete('/:id', protect, strictLimiter, deleteIncome);
 router.get('/downloadexcel', protect, downloadIncomeExcel);
 
-// exporting this model
 module.exports = router;
