@@ -1,8 +1,3 @@
-/**
- * Rate Limiter Configuration
- * Centralized configuration for all rate limiters
- */
-
 module.exports = {
     // Authentication endpoints
     auth: {
