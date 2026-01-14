@@ -1,21 +1,22 @@
 const express = require("express");
-
-// Import All controller
-const { addExpense, 
+const { 
+    addExpense, 
     getAllExpense, 
     deleteExpense, 
-    downloadExpenseExcel } = require("../controllers/expenseController");
+    downloadExpenseExcel 
+} = require("../controllers/expenseController");
 
-// Import Middleware
 const { protect } = require("../middleware/authMiddleware");
 
-// All Expense Routes
+// Import rate limiters
+const { strictLimiter } = require("../middleware/rateLimiter");
+
 const router = express.Router();
 
-router.post('/add', protect, addExpense);
+// Apply rate limiter to expensive operations
+router.post('/add', protect, strictLimiter, addExpense);
 router.get('/get', protect, getAllExpense);
-router.delete('/:id', protect, deleteExpense ) ;
+router.delete('/:id', protect, strictLimiter, deleteExpense);
 router.get('/downloadexcel', protect, downloadExpenseExcel);
 
-// exporting this model
 module.exports = router;
