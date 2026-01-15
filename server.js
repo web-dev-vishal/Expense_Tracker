@@ -13,10 +13,23 @@ const app = express();
 
 // Middleware
 app.use(express.json());
-const { apiLimiter } = require('./middleware/rateLimiter');
 
-// Apply global rate limiter to all API routes (OPTIONAL)
-app.use('/api', apiLimiter);
+// Import rate limiter 
+let apiLimiter;
+try {
+    const rateLimiterModule = require('./middleware/rateLimiter');
+    apiLimiter = rateLimiterModule.apiLimiter;
+    
+    // Only apply if it's a valid function
+    if (typeof apiLimiter === 'function') {
+        app.use('/api', apiLimiter);
+        console.log('✅ Rate limiter applied');
+    } else {
+        console.warn('⚠️ apiLimiter is not a function, skipping rate limiting');
+    }
+} catch (error) {
+    console.warn('⚠️ Rate limiter not found, continuing without it:', error.message);
+}
 
 // Health check route
 app.get('/', (req, res) => {
