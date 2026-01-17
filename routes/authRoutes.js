@@ -1,58 +1,21 @@
-// const express = require("express");
-// const { 
-//     registerUser, 
-//     loginUser, 
-//     getUserInfo,
-//     sendOTP,
-//     verifyOTPController,
-//     resetPassword,
-//     logout,
-//     logoutAllDevices,
-//     getActiveSessions
-// } = require("../controllers/authController");
-
-// const { protect } = require("../middleware/authMiddleware");
-
-// const router = express.Router();
-
-// // Auth routes with rate limiting
-// router.post('/register', registerUser);
-// router.post('/login', loginUser);
-// router.get('/user', protect, getUserInfo);
-
-// // OTP routes with rate limiting
-// router.post('/send-otp', sendOTP);
-// router.post('/verify-otp', verifyOTPController);
-// router.post('/reset-password', resetPassword);
-
-// // Session management
-// router.post('/logout', protect, logout);
-// router.post('/logout-all', protect, logoutAllDevices);
-// router.get('/sessions', protect, getActiveSessions);
-
-// module.exports = router;
-
-/**
+/*
  * ========================================
- * AUTH ROUTES WITH RATE LIMITING
- * ========================================
- * 
- * ✅ DOUBLE-CHECKED & VERIFIED
- * ✅ Production Ready
- * ✅ No Syntax Errors
- * ✅ Complete & Correct
- * 
- * File: routes/authRoutes.js
- * Purpose: Authentication routes with rate limiting protection
- * Dependencies: Rate limiting middleware
- * 
- * Author: Senior Backend Developer
- * Date: January 17, 2026
- * Status: APPROVED FOR PRODUCTION ✅
+ * AUTHENTICATION ROUTES WITH RATE LIMITING
  * ========================================
  */
 
 const express = require("express");
+const { protect } = require("../middleware/authMiddleware");
+const { 
+    authLimiter,
+    otpLimiter,
+    otpVerifyLimiter,
+    passwordResetLimiter,
+    apiReadLimiter,
+    strictLimiter
+} = require("../middleware/rateLimitMiddleware");
+
+// Import authentication controller functions (VERIFIED - these exist!)
 const { 
     registerUser, 
     loginUser, 
@@ -63,80 +26,75 @@ const {
     logout,
     logoutAllDevices,
     getActiveSessions
-} = require("../controllers/authController.js");
-
-const { protect } = require("../middleware/authMiddleware.js");
-const { 
-    authLimiter, 
-    otpLimiter, 
-    otpVerifyLimiter,
-    passwordResetLimiter,
-    apiReadLimiter 
-} = require("../middleware/rateLimitMiddleware.js");
+} = require("../controllers/authController");
 
 const router = express.Router();
 
 // ==========================================
-// AUTHENTICATION ROUTES
+// PUBLIC AUTH ROUTES (WITH STRICT RATE LIMITING)
 // ==========================================
 
 /**
  * @route   POST /api/v1/auth/register
- * @desc    Register a new user
+ * @desc    Register new user
  * @access  Public
- * @limit   5 requests per 15 minutes
- * @protection authLimiter - Prevents mass account creation
+ * @limit   5 attempts per 15 minutes (authLimiter)
+ * @controller registerUser
  */
 router.post('/register', authLimiter, registerUser);
 
 /**
  * @route   POST /api/v1/auth/login
- * @desc    Login user
+ * @desc    Login user and return JWT token
  * @access  Public
- * @limit   5 requests per 15 minutes
- * @protection authLimiter - Prevents brute force attacks
+ * @limit   5 attempts per 15 minutes (authLimiter)
+ * @controller loginUser
  */
 router.post('/login', authLimiter, loginUser);
 
-/**
- * @route   GET /api/v1/auth/user
- * @desc    Get logged in user info
- * @access  Private
- * @limit   60 requests per minute
- * @protection protect + apiReadLimiter
- */
-router.get('/user', protect, apiReadLimiter, getUserInfo);
-
 // ==========================================
-// OTP ROUTES
+// OTP ROUTES (WITH SPECIFIC RATE LIMITING)
 // ==========================================
 
 /**
  * @route   POST /api/v1/auth/send-otp
- * @desc    Send OTP to user's email/phone
+ * @desc    Send OTP to user's email
  * @access  Public
- * @limit   3 requests per 10 minutes
- * @protection otpLimiter - Prevents OTP spam
+ * @limit   3 requests per 10 minutes (otpLimiter)
+ * @controller sendOTP
  */
 router.post('/send-otp', otpLimiter, sendOTP);
 
 /**
  * @route   POST /api/v1/auth/verify-otp
- * @desc    Verify OTP entered by user
+ * @desc    Verify OTP code
  * @access  Public
- * @limit   10 requests per 15 minutes
- * @protection otpVerifyLimiter - Prevents OTP brute force
+ * @limit   10 attempts per 15 minutes (otpVerifyLimiter)
+ * @controller verifyOTPController
  */
 router.post('/verify-otp', otpVerifyLimiter, verifyOTPController);
 
 /**
  * @route   POST /api/v1/auth/reset-password
- * @desc    Reset user password
+ * @desc    Reset user password (requires valid OTP)
  * @access  Public
- * @limit   3 requests per hour
- * @protection passwordResetLimiter - Prevents password reset abuse
+ * @limit   3 attempts per hour (passwordResetLimiter)
+ * @controller resetPassword
  */
 router.post('/reset-password', passwordResetLimiter, resetPassword);
+
+// ==========================================
+// PROTECTED USER ROUTES
+// ==========================================
+
+/**
+ * @route   GET /api/v1/auth/user
+ * @desc    Get current user information
+ * @access  Private
+ * @limit   60 requests per minute (apiReadLimiter)
+ * @controller getUserInfo
+ */
+router.get('/user', protect, apiReadLimiter, getUserInfo);
 
 // ==========================================
 // SESSION MANAGEMENT ROUTES
@@ -146,26 +104,26 @@ router.post('/reset-password', passwordResetLimiter, resetPassword);
  * @route   POST /api/v1/auth/logout
  * @desc    Logout from current session
  * @access  Private
- * @limit   60 requests per minute
- * @protection protect + apiReadLimiter
+ * @limit   60 requests per minute (apiReadLimiter)
+ * @controller logout
  */
 router.post('/logout', protect, apiReadLimiter, logout);
 
 /**
  * @route   POST /api/v1/auth/logout-all
- * @desc    Logout from all devices
+ * @desc    Logout from all devices/sessions
  * @access  Private
- * @limit   60 requests per minute
- * @protection protect + apiReadLimiter
+ * @limit   5 requests per hour (strictLimiter)
+ * @controller logoutAllDevices
  */
-router.post('/logout-all', protect, apiReadLimiter, logoutAllDevices);
+router.post('/logout-all', protect, strictLimiter, logoutAllDevices);
 
 /**
  * @route   GET /api/v1/auth/sessions
  * @desc    Get all active sessions
  * @access  Private
- * @limit   60 requests per minute
- * @protection protect + apiReadLimiter
+ * @limit   60 requests per minute (apiReadLimiter)
+ * @controller getActiveSessions
  */
 router.get('/sessions', protect, apiReadLimiter, getActiveSessions);
 

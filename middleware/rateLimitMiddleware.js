@@ -1,20 +1,6 @@
-/**
+/*
  * ========================================
  * RATE LIMITING MIDDLEWARE
- * ========================================
- * 
- * ✅ DOUBLE-CHECKED & VERIFIED
- * ✅ Production Ready
- * ✅ No Syntax Errors
- * ✅ Complete & Correct
- * 
- * File: middleware/rateLimitMiddleware.js
- * Purpose: Redis-backed rate limiting for Express.js
- * Dependencies: express-rate-limit, rate-limit-redis
- * 
- * Author: Senior Backend Developer
- * Date: January 17, 2026
- * Status: APPROVED FOR PRODUCTION ✅
  * ========================================
  */
 
@@ -37,7 +23,9 @@ const { getRedisClient } = require('../config/redis');
  * Returns 429 status with detailed error information
  */
 const rateLimitHandler = (req, res) => {
-    const retryAfter = Math.ceil(req.rateLimit.resetTime / 1000);
+    const retryAfter = req.rateLimit.resetTime 
+        ? Math.ceil(req.rateLimit.resetTime / 1000) 
+        : 900; // Default 15 minutes
     
     res.status(429).json({
         success: false,
@@ -48,43 +36,34 @@ const rateLimitHandler = (req, res) => {
     });
 };
 
-/**
- * Skip failed requests - only count successful requests
- * Used for write operations to avoid penalizing validation errors
- */
-const skipFailedRequests = (req, res) => {
-    return res.statusCode < 400;
-};
-
-/**
- * Generate unique key for rate limiting based on IP
- * Works correctly behind proxies when trust proxy is configured
- */
-const keyGenerator = (req) => {
-    return req.ip || req.connection.remoteAddress;
-};
-
 // ==========================================
-// REDIS STORE CONFIGURATION
+// REDIS STORE CONFIGURATION - LAZY LOADING
 // ==========================================
 
 /**
  * Get Redis store for rate limiting
- * Falls back to memory store with warning if Redis is unavailable
+ * LAZY INITIALIZATION: Creates store only when needed
+ * Falls back to memory store if Redis is unavailable
  */
 const getRedisStore = () => {
     const redisClient = getRedisClient();
     
+    // Redis not connected - use memory store
     if (!redisClient) {
-        console.warn('⚠️ Redis client not available, using memory store for rate limiting');
-        return undefined;
+        return undefined; // express-rate-limit will use MemoryStore
     }
 
-    return new RedisStore({
-        client: redisClient,
-        prefix: 'ratelimit:',
-        sendCommand: (...args) => redisClient.sendCommand(args),
-    });
+    // Redis connected - use Redis store
+    try {
+        return new RedisStore({
+            client: redisClient,
+            prefix: 'ratelimit:',
+            sendCommand: (...args) => redisClient.sendCommand(args),
+        });
+    } catch (error) {
+        console.error('⚠️ Failed to create Redis store:', error.message);
+        return undefined; // Fallback to memory store
+    }
 };
 
 // ==========================================
@@ -104,10 +83,10 @@ const generalLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
     max: 100, // 100 requests per 15 minutes
     message: 'Too many requests from this IP, please try again after 15 minutes',
-    standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-    legacyHeaders: false, // Disable `X-RateLimit-*` headers
+    standardHeaders: true,
+    legacyHeaders: false,
     handler: rateLimitHandler,
-    keyGenerator: keyGenerator,
+    // Removed custom keyGenerator - uses default which handles IPv6
 });
 
 /**
@@ -126,7 +105,6 @@ const authLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,
-    keyGenerator: keyGenerator,
     skipSuccessfulRequests: false, // Count all attempts
 });
 
@@ -146,7 +124,6 @@ const otpLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,
-    keyGenerator: keyGenerator,
 });
 
 /**
@@ -165,7 +142,6 @@ const otpVerifyLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,
-    keyGenerator: keyGenerator,
 });
 
 /**
@@ -184,7 +160,6 @@ const passwordResetLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,
-    keyGenerator: keyGenerator,
 });
 
 /**
@@ -203,7 +178,6 @@ const apiWriteLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,
-    keyGenerator: keyGenerator,
     skipSuccessfulRequests: true, // Only count failed requests
 });
 
@@ -223,7 +197,6 @@ const apiReadLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,
-    keyGenerator: keyGenerator,
 });
 
 /**
@@ -242,7 +215,6 @@ const strictLimiter = rateLimit({
     standardHeaders: true,
     legacyHeaders: false,
     handler: rateLimitHandler,
-    keyGenerator: keyGenerator,
 });
 
 // ==========================================
