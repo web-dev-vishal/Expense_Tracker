@@ -137,7 +137,7 @@ const otpLimiter = rateLimit({
 const otpVerifyLimiter = rateLimit({
     store: getRedisStore(),
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // 10 verification attempts per 15 minutes
+    max: 3, // 10 verification attempts per 15 minutes
     message: 'Too many OTP verification attempts. Please try again after 15 minutes',
     standardHeaders: true,
     legacyHeaders: false,
