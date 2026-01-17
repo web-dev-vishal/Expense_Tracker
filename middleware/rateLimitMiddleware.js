@@ -173,7 +173,7 @@ const passwordResetLimiter = rateLimit({
 const apiWriteLimiter = rateLimit({
     store: getRedisStore(),
     windowMs: 60 * 1000, // 1 minute
-    max: 20, // 20 write operations per minute
+    max: 8, // 20 write operations per minute
     message: 'Too many create/update requests. Please slow down',
     standardHeaders: true,
     legacyHeaders: false,
@@ -192,7 +192,7 @@ const apiWriteLimiter = rateLimit({
 const apiReadLimiter = rateLimit({
     store: getRedisStore(),
     windowMs: 60 * 1000, // 1 minute
-    max: 60, // 60 read operations per minute
+    max: 5, // 60 read operations per minute
     message: 'Too many requests. Please slow down',
     standardHeaders: true,
     legacyHeaders: false,
