@@ -41,6 +41,12 @@ exports.getAllExpense = async (req, res) => {
         // Call service to get expenses (with caching)
         const expenses = await expenseService.getAllExpenses(userId);
         
+        res.status(200).json({
+            message: "Expenses records retrieved successfully",
+            count: expenses.length,
+            expenses: expenses
+        });
+
         res.json(expenses);
 
     } catch (error) {

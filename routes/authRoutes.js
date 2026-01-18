@@ -25,7 +25,8 @@ const {
     resetPassword,
     logout,
     logoutAllDevices,
-    getActiveSessions
+    getActiveSessions,
+    createSession  
 } = require("../controllers/authController");
 
 const router = express.Router();
@@ -63,7 +64,7 @@ router.post('/login', authLimiter, loginUser);
  * @limit   3 requests per 10 minutes (otpLimiter)
  * @controller sendOTP
  */
-router.post('/send-otp', otpLimiter, sendOTP);
+router.post('/sendotp', otpLimiter, sendOTP);
 
 /**
  * @route   POST /api/v1/auth/verify-otp
@@ -72,7 +73,7 @@ router.post('/send-otp', otpLimiter, sendOTP);
  * @limit   10 attempts per 15 minutes (otpVerifyLimiter)
  * @controller verifyOTPController
  */
-router.post('/verify-otp', otpVerifyLimiter, verifyOTPController);
+router.post('/verifyotp', otpVerifyLimiter, verifyOTPController);
 
 /**
  * @route   POST /api/v1/auth/reset-password
@@ -81,7 +82,7 @@ router.post('/verify-otp', otpVerifyLimiter, verifyOTPController);
  * @limit   3 attempts per hour (passwordResetLimiter)
  * @controller resetPassword
  */
-router.post('/reset-password', passwordResetLimiter, resetPassword);
+router.post('/resetpassword', passwordResetLimiter, resetPassword);
 
 // ==========================================
 // PROTECTED USER ROUTES
@@ -99,6 +100,15 @@ router.get('/user', protect, apiReadLimiter, getUserInfo);
 // ==========================================
 // SESSION MANAGEMENT ROUTES
 // ==========================================
+
+/**
+ * @route   POST /api/v1/auth/session
+ * @desc    Create a new session (manual session creation)
+ * @access  Private
+ * @limit   5 attempts per 15 minutes (authLimiter)
+ * @controller createSession
+ */
+router.post('/createsession', protect, authLimiter, createSession);
 
 /**
  * @route   POST /api/v1/auth/logout

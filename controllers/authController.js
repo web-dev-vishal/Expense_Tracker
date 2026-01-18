@@ -139,6 +139,107 @@ exports.getUserInfo = async (req, res) => {
     }
 };
 
+// ============= NEW SESSION MANAGEMENT FEATURES =============
+
+// Create a new session (typically called during login)
+exports.createSession = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const { deviceInfo, ipAddress } = req.body;
+
+        const result = await createSession(userId, {
+            deviceInfo,
+            ipAddress,
+            userAgent: req.headers['user-agent']
+        });
+
+        if (!result.success) {
+            return res.status(500).json({ 
+                message: "Error creating session",
+                error: result.error 
+            });
+        }
+
+        res.status(201).json({
+            message: "Session created successfully",
+            sessionId: result.sessionId,
+            session: result.session
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error creating session", error: error.message });
+    }
+};
+
+// Logout (Delete current session)
+exports.logout = async (req, res) => {
+    try {
+        const userId = req.user._id;
+        const sessionId = req.sessionId;
+
+        const result = await deleteSession(userId, sessionId);
+
+        if (!result.success) {
+            return res.status(500).json({ 
+                message: "Error logging out",
+                error: result.error 
+            });
+        }
+
+        res.status(200).json({
+            message: "Logged out successfully"
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error logging out", error: error.message });
+    }
+};
+
+// Logout from all devices
+exports.logoutAllDevices = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const result = await deleteAllSessions(userId);
+
+        if (!result.success) {
+            return res.status(500).json({ 
+                message: "Error logging out from all devices",
+                error: result.error 
+            });
+        }
+
+        res.status(200).json({
+            message: `Logged out from all devices successfully`,
+            devicesLoggedOut: result.deletedCount
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error logging out from all devices", error: error.message });
+    }
+};
+
+// Get active sessions
+exports.getActiveSessions = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        const result = await getActiveSessions(userId);
+
+        if (!result.success) {
+            return res.status(500).json({ 
+                message: "Error fetching active sessions",
+                error: result.error 
+            });
+        }
+
+        res.status(200).json({
+            message: "Active sessions retrieved successfully",
+            activeSessions: result.sessions,
+            totalSessions: result.count
+        });
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching active sessions", error: error.message });
+    }
+};
+
 // ============= OTP FEATURES - EMAIL ONLY =============
 
 // Send OTP via Email Only
@@ -221,6 +322,7 @@ exports.resetPassword = async (req, res) => {
     const { email, otp, newPassword } = req.body;
 
     if (!email || !otp || !newPassword) {
+
         return res.status(400).json({ message: "Email, OTP, and new password are required" });
     }
 
@@ -255,77 +357,5 @@ exports.resetPassword = async (req, res) => {
         });
     } catch (error) {
         res.status(500).json({ message: "Error resetting password", error: error.message });
-    }
-};
-
-// ============= NEW SESSION MANAGEMENT FEATURES =============
-
-// Logout (Delete current session)
-exports.logout = async (req, res) => {
-    try {
-        const userId = req.user._id;
-        const sessionId = req.sessionId;
-
-        const result = await deleteSession(userId, sessionId);
-
-        if (!result.success) {
-            return res.status(500).json({ 
-                message: "Error logging out",
-                error: result.error 
-            });
-        }
-
-        res.status(200).json({
-            message: "Logged out successfully"
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Error logging out", error: error.message });
-    }
-};
-
-// Logout from all devices
-exports.logoutAllDevices = async (req, res) => {
-    try {
-        const userId = req.user._id;
-
-        const result = await deleteAllSessions(userId);
-
-        if (!result.success) {
-            return res.status(500).json({ 
-                message: "Error logging out from all devices",
-                error: result.error 
-            });
-        }
-
-        res.status(200).json({
-            message: `Logged out from all devices successfully`,
-            devicesLoggedOut: result.deletedCount
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Error logging out from all devices", error: error.message });
-    }
-};
-
-// Get active sessions
-exports.getActiveSessions = async (req, res) => {
-    try {
-        const userId = req.user._id;
-
-        const result = await getActiveSessions(userId);
-
-        if (!result.success) {
-            return res.status(500).json({ 
-                message: "Error fetching active sessions",
-                error: result.error 
-            });
-        }
-
-        res.status(200).json({
-            message: "Active sessions retrieved successfully",
-            activeSessions: result.sessions,
-            totalSessions: result.count
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Error fetching active sessions", error: error.message });
     }
 };

@@ -55,7 +55,6 @@ services:
       timeout: 10s
       retries: 5
 
-      
 volumes:
   mongodb_data:
     driver: local
@@ -65,7 +64,6 @@ volumes:
     driver: local
   rabbitmq_logs:
     driver: local
-  
 
 networks:
   expense_network:
