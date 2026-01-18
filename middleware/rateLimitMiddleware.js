@@ -155,7 +155,7 @@ const otpVerifyLimiter = rateLimit({
 const passwordResetLimiter = rateLimit({
     store: getRedisStore(),
     windowMs: 60 * 60 * 1000, // 1 hour
-    max: 3, // 3 password reset attempts per hour
+    max: 6, // 3 password reset attempts per hour
     message: 'Too many password reset attempts. Please try again after 1 hour',
     standardHeaders: true,
     legacyHeaders: false,
