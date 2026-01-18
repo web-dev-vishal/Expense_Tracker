@@ -9,7 +9,13 @@
     "dev": "nodemon server.js",
     "start": "node server.js"
   },
-  "keywords": [],
+  "keywords": [
+    "expense-tracker",
+    "rabbitmq",
+    "redis",
+    "mongodb",
+    "nodejs"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
