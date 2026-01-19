@@ -1,181 +1,211 @@
 # Expense Tracker - Backend API
 
-A robust RESTful API built with Node.js, Express, and MongoDB for managing personal expenses and tracking financial transactions.
+A robust, scalable RESTful API built with Node.js, Express, and MongoDB for managing personal expenses and tracking financial transactions. Features message queue integration with RabbitMQ, Redis caching, email notifications, and background workers for async processing.
 
 ## Tech Stack
 
-```
 - **Runtime:** Node.js
 - **Framework:** Express.js
-- **Database:** MongoDB
+- **Database:** MongoDB (with Mongoose ODM)
+- **Message Queue:** RabbitMQ (AMQP)
+- **Cache:** Redis
 - **Authentication:** JWT (JSON Web Tokens)
 - **Security:** bcrypt for password hashing
 - **File Upload:** Multer middleware
-- **ODM:** Mongoose
+- **Email Service:** Nodemailer (Gmail)
+- **Containerization:** Docker & Docker Compose
+
+## Architecture
+
+```
+┌─────────────┐      ┌─────────────┐      ┌─────────────┐
+│   Client    │─────▶│  Express    │─────▶│  MongoDB    │
+│             │      │   Server    │      │             │
+└─────────────┘      └──────┬──────┘      └─────────────┘
+                            │
+                ┌───────────┼───────────┐
+                │           │           │
+         ┌──────▼─────┐ ┌──▼──────┐ ┌──▼──────────┐
+         │  RabbitMQ  │ │  Redis  │ │   Worker    │
+         │  (Queue)   │ │ (Cache) │ │  (Consumer) │
+         └────────────┘ └─────────┘ └─────────────┘
 ```
 
 ## Features
 
-```
-- User authentication and authorization
-- Secure JWT-based session management
-- Expense tracking and management
-- Income tracking and management
-- Category-based expense organization
-- Dashboard with financial statistics and summaries
-- File upload support for receipts and documents
-- User-specific data isolation
-- Input validation and error handling
-- RESTful API architecture
-- Excel export functionality for expense data
-```
+- **User Authentication & Authorization**
+  - JWT-based session management
+  - Secure password hashing with bcrypt
+  - Session management with Redis
+  - Multi-device session support
+
+- **Expense & Income Tracking**
+  - Create, read, update, delete expenses/income
+  - Category-based expense organization
+  - Source-based income tracking
+  - File upload support for receipts
+
+- **Dashboard Analytics**
+  - Financial statistics and summaries
+  - Monthly trends (6-month history)
+  - Top expense categories
+  - Savings rate calculation
+  - Transaction statistics
+  - Redis caching for performance
+
+- **Message Queue Integration**
+  - Async event processing with RabbitMQ
+  - Event-driven architecture
+  - Separate worker process for consumers
+  - Retry mechanism with dead letter handling
+
+- **Caching Layer**
+  - Redis integration for high-performance caching
+  - Cache invalidation on data updates
+  - Fallback to database on cache miss
+
+- **Email Notifications**
+  - OTP generation and verification
+  - Email service with Nodemailer
+  - HTML email templates
+
+- **Excel Export**
+  - Export expense/income data to Excel format
+
+- **Docker Support**
+  - Multi-container setup with Docker Compose
+  - MongoDB, Redis, and RabbitMQ containers
+  - Persistent volumes for data
 
 ## Prerequisites
 
-Before running this application, make sure you have the following installed:
+Before running this application, ensure you have:
 
-- Node.js (v14 or higher)
-- MongoDB (MongoDB Compass for GUI management)
-- npm or yarn package manager
+- **Node.js** (v14 or higher)
+- **MongoDB** (local or MongoDB Atlas)
+- **Redis** (local or cloud)
+- **RabbitMQ** (local or cloud)
+- **npm** or **yarn** package manager
+- **Docker & Docker Compose** (optional, for containerized setup)
 
 ## Installation
 
-1. Clone the repository:
+### 1. Clone the Repository
 
 ```bash
 git clone <repository-url>
 cd backend
 ```
 
-2. Install dependencies:
+### 2. Install Dependencies
 
 ```bash
 npm install
 ```
 
-3. Create a `.env` file in the backend directory with the following variables:
+### 3. Environment Configuration
+
+Create a `.env` file in the backend directory:
 
 ```env
+# Server Configuration
 PORT=5000
-MONGO_URI=mongodb://localhost:27017/expense_tracker
-JWT_SECRET=your_own_jwt_secret_key_here
 NODE_ENV=development
+
+# Database
+DATABASE_URL=mongodb://localhost:27017/expense_tracker
+
+# JWT Secret
+JWT_SECRET=your_own_jwt_secret_key_here
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379
+
+# RabbitMQ Configuration
+RABBITMQ_USER=admin
+RABBITMQ_PASS=admin123
+RABBITMQ_HOST=localhost
+RABBITMQ_PORT=5672
+RABBITMQ_VHOST=expense_tracker
+
+# Email Configuration (Gmail)
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
 ```
 
-4. Set up the MongoDB database:
+### 4. Setup with Docker (Recommended)
+
+Start all services using Docker Compose:
 
 ```bash
-# Start MongoDB service
-# On Windows:
-net start MongoDB
-
-# On macOS (using Homebrew):
-brew services start mongodb-community
-
-# On Linux:
-sudo systemctl start mongod
-
-# The database and collections will be created automatically when the application starts
+docker-compose up -d
 ```
 
-5. Create an uploads directory (if not present):
+This will start:
+- MongoDB (port 27017)
+- Redis (port 6379)
+- RabbitMQ (AMQP: 5672, Management UI: 15672)
+
+Access RabbitMQ Management UI at `http://localhost:15672`
+- Username: `admin`
+- Password: `admin123`
+
+### 5. Manual Setup (Without Docker)
+
+**Start MongoDB:**
+```bash
+# Windows
+net start MongoDB
+
+# macOS (Homebrew)
+brew services start mongodb-community
+
+# Linux
+sudo systemctl start mongod
+```
+
+**Start Redis:**
+```bash
+# Windows (using Redis for Windows)
+redis-server
+
+# macOS (Homebrew)
+brew services start redis
+
+# Linux
+sudo systemctl start redis
+```
+
+**Start RabbitMQ:**
+```bash
+# Windows
+rabbitmq-server
+
+# macOS (Homebrew)
+brew services start rabbitmq
+
+# Linux
+sudo systemctl start rabbitmq-server
+```
+
+### 6. Create Uploads Directory
 
 ```bash
 mkdir uploads
-```
-
-## Database Schema
-
-The application uses the following MongoDB collections:
-
-### Users Collection
-
-```javascript
-{
-  _id: ObjectId,
-  name: String (required),
-  email: String (unique, required),
-  password: String (hashed, required),
-  createdAt: Date (default: current timestamp),
-  updatedAt: Date (default: current timestamp)
-}
-```
-
-### Expenses Collection
-
-```javascript
-{
-  _id: ObjectId,
-  user_id: ObjectId (reference to User),
-  title: String (required),
-  amount: Number (required),
-  category: String (required),
-  description: String,
-  date: Date (required),
-  receipt: String (file path/URL for uploaded receipt),
-  createdAt: Date (default: current timestamp),
-  updatedAt: Date (default: current timestamp)
-}
-```
-
-### Income Collection
-
-```javascript
-{
-  _id: ObjectId,
-  user_id: ObjectId (reference to User),
-  title: String (required),
-  amount: Number (required),
-  source: String (required),
-  description: String,
-  date: Date (required),
-  createdAt: Date (default: current timestamp),
-  updatedAt: Date (default: current timestamp)
-}
-```
-
-## Project Structure
-
-```
-backend/
-├── config/                   # Configuration files
-│   └── db.js                 # MongoDB database connection configuration
-├── controllers/              # Business logic handlers
-│   ├── authController.js     # Handles authentication logic (login, register, token generation)
-│   ├── desktopController.js  # Handles desktop-specific operations
-│   ├── expenseController.js  # Manages expense operations (create, read, update, delete expenses)
-│   └── incomeController.js   # Manages income operations (create, read, update, delete income)
-├── middleware/               # Express middleware functions
-│   ├── authMiddleware.js     # Authentication and authorization middleware (JWT validation)
-│   └── uploadMiddleware.js   # File upload handling middleware
-├── models/                   # MongoDB/Mongoose models
-│   ├── Expense.js            # Expense schema and model
-│   ├── Income.js             # Income schema and model
-│   └── User.js               # User schema and model
-├── node_modules/             # Project dependencies (installed via npm)
-├── routes/                   # API route definitions
-│   ├── authRoutes.js         # Routes for authentication endpoints (/api/auth/*)
-│   ├── dashboardRoutes.js    # Routes for dashboard data endpoints (/api/dashboard/*)
-│   ├── dashboardRoutes.js    # Duplicate dashboard routes file
-│   ├── expenseRoutes.js      # Routes for expense endpoints (/api/expenses/*)
-│   └── incomeRoutes.js       # Routes for income endpoints (/api/income/*)
-├── uploads/                  # Directory for uploaded files
-│   └── [uploaded images]     # User-uploaded expense/income receipts and images
-├── .env                      # Environment variables (database credentials, JWT secret, ports)
-├── .gitignore                # Git ignore file
-├── expense_details.xlsx      # Excel file for expense data (possibly for import/export)
-├── package-lock.json         # Locked versions of npm dependencies
-├── package.json              # Project dependencies and scripts
-├── README.md                 # Project documentation
-└── server.js                 # Main application entry point (server setup and configuration)
 ```
 
 ## Running the Application
 
 ### Development Mode
 
+**Start the main server:**
 ```bash
 npm run dev
+```
+
+**Start the worker (in a separate terminal):**
+```bash
+node workers/consumer.js
 ```
 
 ### Production Mode
@@ -184,60 +214,408 @@ npm run dev
 npm start
 ```
 
-The server will start on `http://localhost:5000` (or the port specified in your .env file).
+The server will start on `http://localhost:5000`
 
-## Environment Variables
+## Project Structure
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| PORT | Server port number | 5000 |
-| MONGO_URI | MongoDB connection string | mongodb://localhost:27017/expense_tracker |
-| JWT_SECRET | Secret key for JWT signing | your_secret_key_here |
-| NODE_ENV | Application environment | development/production |
+```
+backend/
+├── config/                      # Configuration files
+│   ├── db.js                    # MongoDB connection
+│   ├── redis.js                 # Redis client configuration
+│   ├── rabbitmq.js              # RabbitMQ connection manager (singleton)
+│   └── queues.js                # Queue definitions & routing keys
+│
+├── controllers/                 # Request handlers
+│   ├── authController.js        # Authentication logic
+│   ├── dashboardController.js   # Dashboard endpoints
+│   ├── expenseController.js     # Expense CRUD operations
+│   └── incomeController.js      # Income CRUD operations
+│
+├── middleware/                  # Express middleware
+│   ├── authMiddleware.js        # JWT authentication
+│   └── uploadMiddleware.js      # File upload handling
+│
+├── models/                      # Mongoose schemas
+│   ├── Expense.js               # Expense model
+│   ├── Income.js                # Income model
+│   └── User.js                  # User model
+│
+├── routes/                      # API route definitions
+│   ├── authRoutes.js            # /api/auth/*
+│   ├── dashboardRoutes.js       # /api/dashboard/*
+│   ├── expenseRoutes.js         # /api/expenses/*
+│   └── incomeRoutes.js          # /api/income/*
+│
+├── services/                    # Business logic layer
+│   ├── dashboardService.js      # Dashboard data aggregation & caching
+│   ├── emailService.js          # Email sending (Nodemailer)
+│   ├── expenseService.js        # Expense business logic & caching
+│   ├── incomeService.js         # Income business logic & caching
+│   ├── messageConsumer.js       # RabbitMQ message consumers
+│   ├── messagePublisher.js      # RabbitMQ message publishers
+│   ├── otpService.js            # OTP generation & verification
+│   └── sessionService.js        # Session management with Redis
+│
+├── workers/                     # Background workers
+│   └── consumer.js              # Standalone RabbitMQ consumer process
+│
+├── uploads/                     # Uploaded files (receipts/images)
+│
+├── .env                         # Environment variables
+├── .gitignore                   # Git ignore rules
+├── docker-compose.yml           # Docker services configuration
+├── package.json                 # Dependencies & scripts
+├── README.md                    # Documentation
+└── server.js                    # Application entry point
+```
+
+## Database Schema
+
+### Users Collection
+```javascript
+{
+  _id: ObjectId,
+  name: String (required),
+  email: String (unique, required),
+  password: String (hashed, required),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Expenses Collection
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: User),
+  icon: String,
+  category: String (required),
+  amount: Number (required),
+  date: Date (required),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Income Collection
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (ref: User),
+  icon: String,
+  source: String (required),
+  amount: Number (required),
+  date: Date (required),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+## RabbitMQ Architecture
+
+### Exchanges
+- **expense_exchange** - Topic exchange for expense events
+- **income_exchange** - Topic exchange for income events
+- **email_exchange** - Topic exchange for email notifications
+- **analytics_exchange** - Topic exchange for analytics events
+
+### Queues
+- **expense.created** - New expense notifications
+- **expense.deleted** - Expense deletion events
+- **income.created** - New income notifications
+- **income.deleted** - Income deletion events
+- **email.notification** - Email sending queue
+- **expense.analytics** - Expense analytics processing
+- **income.analytics** - Income analytics processing
+
+### Event Flow
+```
+1. User creates expense
+   ↓
+2. expenseService saves to MongoDB
+   ↓
+3. messagePublisher publishes to expense_exchange
+   ↓
+4. Messages routed to:
+   - expense.created queue
+   - expense.analytics queue
+   ↓
+5. Worker consumes messages
+   ↓
+6. Cache updated, analytics processed
+```
+
+## Redis Caching Strategy
+
+### Cache Keys
+- `expenses:user:{userId}` - User's expenses list (5 min TTL)
+- `income:user:{userId}` - User's income list (5 min TTL)
+- `dashboard:user:{userId}` - Dashboard data (5 min TTL)
+- `otp:{email}` - OTP codes (10 min TTL)
+- `session:{userId}:{sessionId}` - User sessions (1 hour TTL)
+- `user_sessions:{userId}` - Active session IDs set
+- `stats:expense:{userId}` - Expense statistics (24 hour TTL)
+- `stats:income:{userId}` - Income statistics (24 hour TTL)
+
+### Cache Invalidation
+Cache is automatically invalidated when:
+- Expense created/deleted
+- Income created/deleted
+- User logs out
+- OTP verified
 
 ## API Endpoints
 
 ### Authentication
-- `POST /api/auth/register` - Register a new user
-- `POST /api/auth/login` - Login user
-- `POST /api/auth/logout` - Logout user (protected)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| POST | `/api/auth/register` | Register new user | No |
+| POST | `/api/auth/login` | Login user | No |
+| POST | `/api/auth/logout` | Logout user | Yes |
 
 ### Dashboard
-- `GET /api/dashboard/stats` - Get dashboard statistics (protected)
-- `GET /api/dashboard/summary` - Get financial summary (protected)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/dashboard/stats` | Get dashboard statistics | Yes |
+| GET | `/api/dashboard/summary` | Get financial summary | Yes |
 
 ### Expenses
-- `GET /api/expenses` - Get all user expenses (protected)
-- `POST /api/expenses` - Create new expense (protected)
-- `GET /api/expenses/:id` - Get specific expense (protected)
-- `PUT /api/expenses/:id` - Update expense (protected)
-- `DELETE /api/expenses/:id` - Delete expense (protected)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/expenses` | Get all expenses | Yes |
+| POST | `/api/expenses` | Create expense | Yes |
+| GET | `/api/expenses/:id` | Get specific expense | Yes |
+| PUT | `/api/expenses/:id` | Update expense | Yes |
+| DELETE | `/api/expenses/:id` | Delete expense | Yes |
 
 ### Income
-- `GET /api/income` - Get all user income records (protected)
-- `POST /api/income` - Create new income record (protected)
-- `GET /api/income/:id` - Get specific income record (protected)
-- `PUT /api/income/:id` - Update income record (protected)
-- `DELETE /api/income/:id` - Delete income record (protected)
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| GET | `/api/income` | Get all income records | Yes |
+| POST | `/api/income` | Create income record | Yes |
+| GET | `/api/income/:id` | Get specific income | Yes |
+| PUT | `/api/income/:id` | Update income | Yes |
+| DELETE | `/api/income/:id` | Delete income | Yes |
+
+## Services Layer
+
+### dashboardService.js
+- Aggregates financial data from MongoDB
+- Calculates statistics (savings rate, monthly trends)
+- Implements Redis caching with 5-minute TTL
+- Provides expense/income breakdown by category/source
+- Returns recent transactions and analytics
+
+### emailService.js
+- Sends OTP emails using Nodemailer
+- Gmail SMTP integration
+- HTML email templates
+- Email delivery confirmation
+
+### expenseService.js
+- Business logic for expense operations
+- Redis caching for expense lists
+- Cache invalidation on create/delete
+- RabbitMQ event publishing
+- Excel export functionality
+
+### incomeService.js
+- Business logic for income operations
+- Redis caching for income lists
+- Cache invalidation on create/delete
+- RabbitMQ event publishing
+- Excel export functionality
+
+### messagePublisher.js
+- Publishes events to RabbitMQ exchanges
+- Initializes exchanges and queues
+- Event types: expense created/deleted, income created/deleted, email notifications
+- Also publishes analytics events
+
+### messageConsumer.js
+- Consumes messages from RabbitMQ queues
+- Updates Redis cache
+- Processes analytics events
+- Sends email notifications
+- Retry mechanism (3 attempts)
+
+### otpService.js
+- Generates 6-digit OTP codes
+- Stores OTP in Redis with 10-minute expiry
+- Verifies OTP and deletes on success
+- TTL checking for OTP validity
+
+### sessionService.js
+- Creates user sessions in Redis
+- Verifies active sessions
+- Multi-device session support
+- Session deletion (single or all devices)
+- Tracks device info and last active time
+
+## Worker Process
+
+The `workers/consumer.js` runs as a separate process to handle async message processing:
+
+**Features:**
+- Connects to RabbitMQ and Redis
+- Starts all message consumers
+- Graceful shutdown handling
+- Error recovery and logging
+- Can be scaled horizontally
+
+**Run worker:**
+```bash
+node workers/consumer.js
+```
 
 ## Security Features
 
-- Password encryption using bcrypt with salt rounds
-- JWT-based authentication with expiration
-- Protected routes with middleware
-- NoSQL injection prevention through Mongoose validation
-- CORS configuration
-- Input validation and sanitization
-- File upload restrictions and validation
-- Secure file storage for receipts and documents
+- **Password Security:** bcrypt hashing with salt rounds
+- **JWT Authentication:** Token-based auth with expiration
+- **Session Management:** Redis-based session store
+- **Protected Routes:** Middleware authentication
+- **NoSQL Injection Prevention:** Mongoose validation
+- **CORS:** Configured for cross-origin requests
+- **Input Validation:** Request data sanitization
+- **File Upload Security:** Multer restrictions
+- **Environment Variables:** Sensitive data in .env
+
+## Environment Variables Reference
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| PORT | Server port | 5000 | No |
+| NODE_ENV | Environment | development | No |
+| DATABASE_URL | MongoDB URI | - | Yes |
+| JWT_SECRET | JWT signing key | - | Yes |
+| REDIS_URL | Redis connection URL | redis://localhost:6379 | No |
+| RABBITMQ_USER | RabbitMQ username | admin | No |
+| RABBITMQ_PASS | RabbitMQ password | admin123 | No |
+| RABBITMQ_HOST | RabbitMQ host | localhost | No |
+| RABBITMQ_PORT | RabbitMQ port | 5672 | No |
+| RABBITMQ_VHOST | RabbitMQ virtual host | expense_tracker | No |
+| EMAIL_USER | Gmail address | - | Yes (for OTP) |
+| EMAIL_PASS | Gmail app password | - | Yes (for OTP) |
+
+## Docker Services
+
+The `docker-compose.yml` defines three services:
+
+### MongoDB Container
+- Image: `mongo:latest`
+- Port: `27017`
+- Volume: Persistent data storage
+- Healthcheck: Connection validation
+
+### Redis Container
+- Image: `redis:latest`
+- Port: `6379`
+- Volume: Persistent data storage
+- Healthcheck: PING response
+
+### RabbitMQ Container
+- Image: `rabbitmq:3.12-management-alpine`
+- Ports: `5672` (AMQP), `15672` (Management UI)
+- Volumes: Data and logs persistence
+- Default credentials: admin/admin123
+- Healthcheck: RabbitMQ diagnostics
+
+## Monitoring & Debugging
+
+### RabbitMQ Management UI
+Access at `http://localhost:15672`
+- Monitor queues and exchanges
+- View message rates
+- Check consumer connections
+
+### Redis CLI
+```bash
+docker exec -it expense_tracker_redis redis-cli
+# Check keys
+KEYS *
+# Get specific key
+GET dashboard:user:123
+```
+
+### MongoDB Compass
+Connect to `mongodb://localhost:27017`
+- View collections
+- Query data
+- Monitor performance
+
+## Performance Optimization
+
+1. **Redis Caching:** 5-minute TTL for frequently accessed data
+2. **Database Indexing:** User IDs indexed for fast queries
+3. **Aggregation Pipelines:** Efficient MongoDB queries
+4. **Message Queue:** Async processing offloaded to workers
+5. **Connection Pooling:** MongoDB and Redis connection reuse
+6. **Graceful Degradation:** Falls back to database if cache fails
+
+## Error Handling
+
+- **Graceful Fallbacks:** Database fallback when Redis fails
+- **Retry Mechanism:** RabbitMQ consumers retry 3 times
+- **Error Logging:** Comprehensive console logging
+- **Validation:** Input validation at controller level
+- **HTTP Status Codes:** Proper status codes for errors
+
+## Troubleshooting
+
+### MongoDB Connection Issues
+```bash
+# Check if MongoDB is running
+docker ps | grep mongodb
+# Or on local machine
+mongosh --eval "db.adminCommand('ping')"
+```
+
+### Redis Connection Issues
+```bash
+# Check Redis connection
+docker exec -it expense_tracker_redis redis-cli ping
+# Should return PONG
+```
+
+### RabbitMQ Connection Issues
+```bash
+# Check RabbitMQ status
+docker exec -it expense_tracker_rabbitmq rabbitmq-diagnostics ping
+# Access management UI
+open http://localhost:15672
+```
+
+### Worker Not Consuming Messages
+- Ensure RabbitMQ is running
+- Check worker logs for errors
+- Verify queue bindings in RabbitMQ UI
+- Restart worker process
+
+### Cache Not Working
+- Verify Redis is connected
+- Check Redis logs for errors
+- Ensure cache keys are correctly formatted
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| Port already in use | Change PORT in .env |
+| JWT errors | Verify JWT_SECRET is set |
+| Module not found | Run `npm install` |
+| Authentication errors | Check JWT token in Authorization header |
+| Email not sending | Verify Gmail app password |
+| Messages not consumed | Start worker with `node workers/consumer.js` |
+| Redis connection failed | Check REDIS_URL in .env |
 
 ## Contributing
 
 1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+2. Create feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit changes (`git commit -m 'Add AmazingFeature'`)
+4. Push to branch (`git push origin feature/AmazingFeature`)
+5. Open Pull Request
 
 ## License
 
@@ -245,31 +623,14 @@ This project is licensed under the MIT License.
 
 ## Contact
 
-For any questions or support, please open an issue in the repository.
+For questions or support, please open an issue in the repository.
 
 ## Acknowledgments
 
-- Express.js documentation
+- Express.js community
 - MongoDB documentation
-- Mongoose ODM documentation
-- Multer documentation
-- JWT documentation
-- Node.js community
-
-## Troubleshooting
-
-### MongoDB Connection Issues
-- Ensure MongoDB service is running
-- Check if the MONGO_URI in .env is correct
-- Verify MongoDB is accessible on the specified port (default: 27017)
-
-### File Upload Issues
-- Ensure the `uploads` directory exists and has proper write permissions
-- Check file size limits in the upload middleware
-- Verify supported file types are configured correctly
-
-### Common Issues
-- **Port already in use:** Change the PORT in .env file
-- **JWT errors:** Ensure JWT_SECRET is set in .env
-- **Module not found:** Run `npm install` to install all dependencies
-- **Authentication errors:** Verify JWT token is being sent in Authorization header
+- RabbitMQ tutorials
+- Redis documentation
+- Nodemailer documentation
+- Docker community
+- Node.js ecosystem
