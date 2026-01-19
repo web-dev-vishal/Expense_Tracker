@@ -107,31 +107,29 @@ npm install
 
 Create a `.env` file in the backend directory:
 
-```env
 # Server Configuration
 PORT=5000
 NODE_ENV=development
 
 # Database
-DATABASE_URL=add your own db connection URL here 
+DATABASE_URL=add your own db connection URL here
 
 # JWT Secret
 JWT_SECRET=your_own_jwt_secret_key_here
 
 # Redis Configuration
-REDIS_URL=add your own REDIS connection URL here 
+REDIS_URL=add your own REDIS connection URL here
 
 # RabbitMQ Configuration
-RABBITMQ_USER=add your own name here 
-RABBITMQ_PASS=add your pass here 
+RABBITMQ_USER=add your own RABBITMQ_USER name here
+RABBITMQ_PASS=add your pass here
 RABBITMQ_HOST=localhost
-RABBITMQ_PORT=add your port no connection URL here 
-RABBITMQ_VHOST=add your vhost name here 
+RABBITMQ_PORT=add your port no here
+RABBITMQ_VHOST=add your vhost name here
 
 # Email Configuration (Gmail)
 EMAIL_USER=your-email@gmail.com
 EMAIL_PASS=your-app-password
-```
 
 ### 4. Setup with Docker (Recommended)
 
