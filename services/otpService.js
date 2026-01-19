@@ -49,17 +49,17 @@ const verifyOTP = async (email, otp) => {
 };
 
 // Delete OTP manually
-// const deleteOTP = async (email) => {
-//     try {
-//         const redisClient = getRedisClient();
-//         const key = `otp:${email}`;
-//         await redisClient.del(key);
-//         return true;
-//     } catch (error) {
-//         console.error('❌ Error deleting OTP:', error.message);
-//         return false;
-//     }
-// };
+const deleteOTP = async (email) => {
+    try {
+        const redisClient = getRedisClient();
+        const key = `otp:${email}`;
+        await redisClient.del(key);
+        return true;
+    } catch (error) {
+        console.error('❌ Error deleting OTP:', error.message);
+        return false;
+    }
+};
 
 // Get remaining time for OTP
 const getOTPExpiry = async (email) => {
