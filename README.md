@@ -509,39 +509,6 @@ Cache is automatically invalidated when:
 - User logs out
 - OTP verified
 
-## API Endpoints
-
-### Authentication
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/auth/register` | Register new user | No |
-| POST | `/api/auth/login` | Login user | No |
-| POST | `/api/auth/logout` | Logout user | Yes |
-
-### Dashboard
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/dashboard/stats` | Get dashboard statistics | Yes |
-| GET | `/api/dashboard/summary` | Get financial summary | Yes |
-
-### Expenses
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/expenses` | Get all expenses | Yes |
-| POST | `/api/expenses` | Create expense | Yes |
-| GET | `/api/expenses/:id` | Get specific expense | Yes |
-| PUT | `/api/expenses/:id` | Update expense | Yes |
-| DELETE | `/api/expenses/:id` | Delete expense | Yes |
-
-### Income
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/income` | Get all income records | Yes |
-| POST | `/api/income` | Create income record | Yes |
-| GET | `/api/income/:id` | Get specific income | Yes |
-| PUT | `/api/income/:id` | Update income | Yes |
-| DELETE | `/api/income/:id` | Delete income | Yes |
-
 ## Services Layer
 
 ### dashboardService.js
@@ -778,3 +745,5 @@ For questions or support, please open an issue in the repository.
 - Nodemailer documentation
 - Docker community
 - Node.js ecosystem
+
+I'll see you in the next one! 🚀
