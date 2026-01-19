@@ -113,20 +113,20 @@ PORT=5000
 NODE_ENV=development
 
 # Database
-DATABASE_URL=mongodb://localhost:27017/expense_tracker
+DATABASE_URL=add your own db connection URL here 
 
 # JWT Secret
 JWT_SECRET=your_own_jwt_secret_key_here
 
 # Redis Configuration
-REDIS_URL=redis://localhost:6379
+REDIS_URL=add your own REDIS connection URL here 
 
 # RabbitMQ Configuration
-RABBITMQ_USER=admin
-RABBITMQ_PASS=admin123
+RABBITMQ_USER=add your own name here 
+RABBITMQ_PASS=add your pass here 
 RABBITMQ_HOST=localhost
-RABBITMQ_PORT=5672
-RABBITMQ_VHOST=expense_tracker
+RABBITMQ_PORT=add your port no connection URL here 
+RABBITMQ_VHOST=add your vhost name here 
 
 # Email Configuration (Gmail)
 EMAIL_USER=your-email@gmail.com
