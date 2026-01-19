@@ -270,45 +270,189 @@ backend/
 └── server.js                    # Application entry point
 ```
 
-## Database Schema
+## Database Schema & ER Diagram
 
-### Users Collection
+### Entity Relationship Diagram
+
+```
+┌─────────────────────────────────────┐
+│             USER                    │
+├─────────────────────────────────────┤
+│ PK  _id: ObjectId                   │
+│     fullName: String (required)     │
+│     email: String (unique, required)│
+│     phone: String (nullable)        │
+│     password: String (hashed)       │
+│     profileImageUrl: String         │
+│     createdAt: Date                 │
+│     updatedAt: Date                 │
+└─────────────┬───────────────────────┘
+              │
+              │ 1
+              │
+              │ has many
+              │
+      ┌───────┴────────┐
+      │                │
+      │ *              │ *
+      │                │
+┌─────▼──────────────────────┐  ┌─────▼──────────────────────┐
+│       EXPENSE              │  │        INCOME              │
+├────────────────────────────┤  ├────────────────────────────┤
+│ PK  _id: ObjectId          │  │ PK  _id: ObjectId          │
+│ FK  userId: ObjectId       │  │ FK  userId: ObjectId       │
+│     icon: String           │  │     icon: String           │
+│     category: String (req) │  │     source: String (req)   │
+│     amount: Number (req)   │  │     amount: Number (req)   │
+│     date: Date             │  │     date: Date             │
+│     description: String    │  │     createdAt: Date        │
+│     createdAt: Date        │  │     updatedAt: Date        │
+│     updatedAt: Date        │  └────────────────────────────┘
+└────────────────────────────┘
+     │
+     │ Indexes:
+     │ - userId (indexed)
+     │ - { userId: 1, date: -1 } (compound)
+```
+
+### Relationships
+
+- **User → Expense**: One-to-Many (One user can have multiple expenses)
+- **User → Income**: One-to-Many (One user can have multiple income records)
+
+### Collection Details
+
+#### Users Collection (`users`)
+
+| Field | Type | Required | Unique | Default | Description |
+|-------|------|----------|--------|---------|-------------|
+| _id | ObjectId | Yes (auto) | Yes | - | Primary key |
+| fullName | String | Yes | No | - | User's full name |
+| email | String | Yes | Yes | - | User's email address |
+| phone | String | No | No | null | User's phone number |
+| password | String | Yes | No | - | Hashed password (bcrypt, 10 rounds) |
+| profileImageUrl | String | No | No | null | URL to user's profile image |
+| createdAt | Date | Yes (auto) | No | Date.now | Account creation timestamp |
+| updatedAt | Date | Yes (auto) | No | Date.now | Last update timestamp |
+
+**Schema Methods:**
+- `comparePassword(candidatePassword)` - Compares plain text password with hashed password
+- Pre-save hook - Automatically hashes password before saving if modified
+
+**Indexes:**
+- email (unique index, auto-created)
+
+---
+
+#### Expenses Collection (`expenses`)
+
+| Field | Type | Required | Default | Validation | Description |
+|-------|------|----------|---------|------------|-------------|
+| _id | ObjectId | Yes (auto) | - | - | Primary key |
+| userId | ObjectId | Yes | - | ref: 'User' | Foreign key to User |
+| icon | String | No | 💰 | - | Emoji or icon representation |
+| category | String | Yes | - | trimmed | Expense category (Food, Rent, etc.) |
+| amount | Number | Yes | - | min: 0 | Expense amount (cannot be negative) |
+| date | Date | No | Date.now | - | Date of expense |
+| description | String | No | - | trimmed | Additional details about expense |
+| createdAt | Date | Yes (auto) | Date.now | - | Record creation timestamp |
+| updatedAt | Date | Yes (auto) | Date.now | - | Last update timestamp |
+
+**Indexes:**
+- userId (single field index)
+- { userId: 1, date: -1 } (compound index for efficient queries)
+
+**Common Categories:**
+- Food & Dining
+- Transportation
+- Shopping
+- Entertainment
+- Bills & Utilities
+- Healthcare
+- Education
+- Others
+
+---
+
+#### Income Collection (`incomes`)
+
+| Field | Type | Required | Default | Validation | Description |
+|-------|------|----------|---------|------------|-------------|
+| _id | ObjectId | Yes (auto) | - | - | Primary key |
+| userId | ObjectId | Yes | - | ref: 'User' | Foreign key to User |
+| icon | String | No | - | - | Emoji or icon representation |
+| source | String | Yes | - | - | Income source (Salary, Freelance, etc.) |
+| amount | Number | Yes | - | - | Income amount |
+| date | Date | No | Date.now | - | Date of income |
+| createdAt | Date | Yes (auto) | Date.now | - | Record creation timestamp |
+| updatedAt | Date | Yes (auto) | Date.now | - | Last update timestamp |
+
+**Common Income Sources:**
+- Salary
+- Freelance
+- Business
+- Investments
+- Rental Income
+- Others
+
+---
+
+### Database Indexes
+
+Indexes are strategically placed for optimal query performance:
+
+1. **User Collection:**
+   - `email` (unique) - For authentication and user lookup
+
+2. **Expense Collection:**
+   - `userId` (single) - For filtering expenses by user
+   - `{ userId: 1, date: -1 }` (compound) - For sorted queries (most recent first)
+
+3. **Income Collection:**
+   - `userId` (implicit through ref) - For filtering income by user
+
+### Sample Data Structure
+
+**User Document:**
 ```javascript
 {
-  _id: ObjectId,
-  name: String (required),
-  email: String (unique, required),
-  password: String (hashed, required),
-  createdAt: Date,
-  updatedAt: Date
+  _id: ObjectId("507f1f77bcf86cd799439011"),
+  fullName: "John Doe",
+  email: "john.doe@example.com",
+  phone: "+1234567890",
+  password: "$2a$10$X1pWZGdM.4MWLkJZmQ1yJO8PvHVZYF9mDZiCzwLdLpKQjGjNjGjNj",
+  profileImageUrl: "https://example.com/images/john.jpg",
+  createdAt: ISODate("2024-01-15T10:30:00Z"),
+  updatedAt: ISODate("2024-01-15T10:30:00Z")
 }
 ```
 
-### Expenses Collection
+**Expense Document:**
 ```javascript
 {
-  _id: ObjectId,
-  userId: ObjectId (ref: User),
-  icon: String,
-  category: String (required),
-  amount: Number (required),
-  date: Date (required),
-  createdAt: Date,
-  updatedAt: Date
+  _id: ObjectId("507f1f77bcf86cd799439012"),
+  userId: ObjectId("507f1f77bcf86cd799439011"),
+  icon: "🍕",
+  category: "Food & Dining",
+  amount: 45.50,
+  date: ISODate("2024-01-20T18:30:00Z"),
+  description: "Dinner at Italian restaurant",
+  createdAt: ISODate("2024-01-20T19:00:00Z"),
+  updatedAt: ISODate("2024-01-20T19:00:00Z")
 }
 ```
 
-### Income Collection
+**Income Document:**
 ```javascript
 {
-  _id: ObjectId,
-  userId: ObjectId (ref: User),
-  icon: String,
-  source: String (required),
-  amount: Number (required),
-  date: Date (required),
-  createdAt: Date,
-  updatedAt: Date
+  _id: ObjectId("507f1f77bcf86cd799439013"),
+  userId: ObjectId("507f1f77bcf86cd799439011"),
+  icon: "💼",
+  source: "Salary",
+  amount: 5000.00,
+  date: ISODate("2024-01-01T00:00:00Z"),
+  createdAt: ISODate("2024-01-01T08:00:00Z"),
+  updatedAt: ISODate("2024-01-01T08:00:00Z")
 }
 ```
 
