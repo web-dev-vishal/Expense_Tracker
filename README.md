@@ -275,44 +275,46 @@ backend/
 ### Entity Relationship Diagram
 
 ```
-┌─────────────────────────────────────┐
-│             USER                    │
-├─────────────────────────────────────┤
-│ PK  _id: ObjectId                   │
-│     fullName: String (required)     │
-│     email: String (unique, required)│
-│     phone: String (nullable)        │
-│     password: String (hashed)       │
-│     profileImageUrl: String         │
-│     createdAt: Date                 │
-│     updatedAt: Date                 │
-└─────────────┬───────────────────────┘
-              │
-              │ 1
-              │
-              │ has many
-              │
-      ┌───────┴────────┐
-      │                │
-      │ *              │ *
-      │                │
-┌─────▼──────────────────────┐  ┌─────▼──────────────────────┐
-│       EXPENSE              │  │        INCOME              │
-├────────────────────────────┤  ├────────────────────────────┤
-│ PK  _id: ObjectId          │  │ PK  _id: ObjectId          │
-│ FK  userId: ObjectId       │  │ FK  userId: ObjectId       │
-│     icon: String           │  │     icon: String           │
-│     category: String (req) │  │     source: String (req)   │
-│     amount: Number (req)   │  │     amount: Number (req)   │
-│     date: Date             │  │     date: Date             │
-│     description: String    │  │     createdAt: Date        │
-│     createdAt: Date        │  │     updatedAt: Date        │
-│     updatedAt: Date        │  └────────────────────────────┘
-└────────────────────────────┘
-     │
-     │ Indexes:
-     │ - userId (indexed)
-     │ - { userId: 1, date: -1 } (compound)
+                    ┌──────────────────────────────────────┐
+                    │              USER                    │
+                    ├──────────────────────────────────────┤
+                    │ PK  _id: ObjectId                    │
+                    │     fullName: String (required)      │
+                    │     email: String (unique, required) │
+                    │     phone: String (nullable)         │
+                    │     password: String (hashed)        │
+                    │     profileImageUrl: String          │
+                    │     createdAt: Date                  │
+                    │     updatedAt: Date                  │
+                    └──────────────┬───────────────────────┘
+                                   │
+                                   │ 1
+                                   │
+                                   │ has many
+                                   │
+                    ┌──────────────┴──────────────┐
+                    │                             │
+                    │ *                           │ *
+                    │                             │
+       ┌────────────▼──────────────┐  ┌──────────▼──────────────┐
+       │        EXPENSE            │  │         INCOME          │
+       ├───────────────────────────┤  ├─────────────────────────┤
+       │ PK  _id: ObjectId         │  │ PK  _id: ObjectId       │
+       │ FK  userId: ObjectId      │  │ FK  userId: ObjectId    │
+       │     icon: String          │  │     icon: String        │
+       │     category: String (*)  │  │     source: String (*)  │
+       │     amount: Number (*)    │  │     amount: Number (*)  │
+       │     date: Date            │  │     date: Date          │
+       │     description: String   │  │     createdAt: Date     │
+       │     createdAt: Date       │  │     updatedAt: Date     │
+       │     updatedAt: Date       │  └─────────────────────────┘
+       └───────────────────────────┘
+       
+       Indexes:
+       • userId (indexed)
+       • { userId: 1, date: -1 } (compound)
+       
+       Legend: (*) = Required field
 ```
 
 ### Relationships
