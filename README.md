@@ -411,51 +411,6 @@ Indexes are strategically placed for optimal query performance:
 3. **Income Collection:**
    - `userId` (implicit through ref) - For filtering income by user
 
-### Sample Data Structure
-
-**User Document:**
-```javascript
-{
-  _id: ObjectId("507f1f77bcf86cd799439011"),
-  fullName: "John Doe",
-  email: "john.doe@example.com",
-  phone: "+1234567890",
-  password: "$2a$10$X1pWZGdM.4MWLkJZmQ1yJO8PvHVZYF9mDZiCzwLdLpKQjGjNjGjNj",
-  profileImageUrl: "https://example.com/images/john.jpg",
-  createdAt: ISODate("2024-01-15T10:30:00Z"),
-  updatedAt: ISODate("2024-01-15T10:30:00Z")
-}
-```
-
-**Expense Document:**
-```javascript
-{
-  _id: ObjectId("507f1f77bcf86cd799439012"),
-  userId: ObjectId("507f1f77bcf86cd799439011"),
-  icon: "🍕",
-  category: "Food & Dining",
-  amount: 45.50,
-  date: ISODate("2024-01-20T18:30:00Z"),
-  description: "Dinner at Italian restaurant",
-  createdAt: ISODate("2024-01-20T19:00:00Z"),
-  updatedAt: ISODate("2024-01-20T19:00:00Z")
-}
-```
-
-**Income Document:**
-```javascript
-{
-  _id: ObjectId("507f1f77bcf86cd799439013"),
-  userId: ObjectId("507f1f77bcf86cd799439011"),
-  icon: "💼",
-  source: "Salary",
-  amount: 5000.00,
-  date: ISODate("2024-01-01T00:00:00Z"),
-  createdAt: ISODate("2024-01-01T08:00:00Z"),
-  updatedAt: ISODate("2024-01-01T08:00:00Z")
-}
-```
-
 ## RabbitMQ Architecture
 
 ### Exchanges
@@ -508,39 +463,6 @@ Cache is automatically invalidated when:
 - Income created/deleted
 - User logs out
 - OTP verified
-
-## API Endpoints
-
-### Authentication
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| POST | `/api/auth/register` | Register new user | No |
-| POST | `/api/auth/login` | Login user | No |
-| POST | `/api/auth/logout` | Logout user | Yes |
-
-### Dashboard
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/dashboard/stats` | Get dashboard statistics | Yes |
-| GET | `/api/dashboard/summary` | Get financial summary | Yes |
-
-### Expenses
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/expenses` | Get all expenses | Yes |
-| POST | `/api/expenses` | Create expense | Yes |
-| GET | `/api/expenses/:id` | Get specific expense | Yes |
-| PUT | `/api/expenses/:id` | Update expense | Yes |
-| DELETE | `/api/expenses/:id` | Delete expense | Yes |
-
-### Income
-| Method | Endpoint | Description | Auth Required |
-|--------|----------|-------------|---------------|
-| GET | `/api/income` | Get all income records | Yes |
-| POST | `/api/income` | Create income record | Yes |
-| GET | `/api/income/:id` | Get specific income | Yes |
-| PUT | `/api/income/:id` | Update income | Yes |
-| DELETE | `/api/income/:id` | Delete income | Yes |
 
 ## Services Layer
 
@@ -778,3 +700,5 @@ For questions or support, please open an issue in the repository.
 - Nodemailer documentation
 - Docker community
 - Node.js ecosystem
+
+I'll see you in the next one! 🚀
